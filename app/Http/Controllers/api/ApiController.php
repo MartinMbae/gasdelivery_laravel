@@ -1,0 +1,273 @@
+<?php
+
+namespace App\Http\Controllers\api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Gas;
+use App\Models\GasCompany;
+use App\Models\Order;
+use App\Models\User;
+use App\Models\UserAddress;
+use App\Models\UserOrder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+
+class ApiController extends Controller
+{
+
+    public $successStatus = 200;
+
+
+    public function gas($refilling = 1): JsonResponse
+    {
+        if ($refilling == 1) {
+            $gasses = Gas::where('availability', 'available')->where('classification', 'Refilling')->get();
+        } else {
+            $gasses = Gas::where('availability', 'available')->where('classification', '!=', 'Refilling')->get();
+        }
+
+        foreach ($gasses as $gas) {
+            $gas->company_name = GasCompany::find($gas->company_id)->name;
+        }
+
+        return response()->json(
+            [
+                'success' => true,
+                'gasses' => $gasses
+            ], $this->successStatus);
+    }
+
+    public function login(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['bail', 'required', 'email',],
+            'password' => ['bail', 'required']
+        ],
+        );
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 401);
+        }
+        $credentials = $request->only('email', 'password');
+        if (Auth::attempt($credentials)) {
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => "Login successfull",
+                    'user' => Auth::user()
+                ], $this->successStatus);
+        } else {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Invalid Email address or Password",
+                ], $this->successStatus);
+        }
+    }
+
+
+    public function addAddress(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'address' => ['bail', 'required',],
+            'house_number' => ['bail', 'required'],
+            'apartment_estate' => ['bail', 'required'],
+            'landmark' => ['bail', 'required'],
+            'user_id' => ['bail', 'required'],
+        ],
+        );
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 401);
+        }
+        $user = User::find($request->user_id);
+        if ($user == null) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Your request was not verified",
+                ], $this->successStatus);
+        } else {
+
+            $address = new UserAddress();
+            $address->user_id = $request->user_id;
+            $address->address = $request->address;
+            $address->house_number = $request->house_number;
+            $address->apartment_estate = $request->apartment_estate;
+            $address->landmark = $request->landmark;
+            $address->save();
+
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => "Address was added",
+                ], $this->successStatus);
+        }
+    }
+
+
+    public function postOrder(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'total_price' => ['bail', 'required',],
+            'count' => ['bail', 'required', 'numeric', 'max:10'],
+            'address_id' => ['bail', 'required'],
+            'gas_id' => ['bail', 'required'],
+            'user_id' => ['bail', 'required'],
+            'order_instructions' => ['bail', 'nullable', 'max:200'],
+        ],
+        );
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 401);
+        }
+        $user = User::find($request->user_id);
+        if ($user == null) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Your request was not verified",
+                ], $this->successStatus);
+        } else {
+            $order = new UserOrder();
+            $order->user_id = $request->user_id;
+            $order->address_id = $request->address_id;
+            $order->gas_id = $request->gas_id;
+            $order->count = $request->count;
+            $order->total_price = $request->total_price;
+            $order->order_instructions = $request->order_instructions;
+            try{
+                $order->save();
+                return response()->json(
+                    [
+                        'success' => true,
+                        'message' => "Order has been placed successfully",
+                    ], $this->successStatus);
+            }catch (\Exception $exception){
+
+                return response()->json(
+                    [
+                        'success' => false,
+                        'message' => "Something went wrong. Order was not placed.",
+                    ], $this->successStatus);
+            }
+        }
+    }
+
+
+    public function fetchMyAddresses($userId)
+    {
+        $user = User::find($userId);
+        if ($user == null) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Your request was not verified",
+                ], $this->successStatus);
+        } else {
+            return response()->json(
+                [
+                    'success' => true,
+                    'addresses' => UserAddress::where('user_id', $userId)->get(),
+                ], $this->successStatus);
+        }
+    }
+
+    public function fetchMyOrders($userId)
+    {
+        $user = User::find($userId);
+        if ($user == null) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Your request was not verified",
+                ], $this->successStatus);
+        } else {
+            $myOrders = UserOrder::where('user_id', $userId)->where('status','0')->get();
+
+            foreach ($myOrders as $myOrder) {
+                $address = UserAddress::find($myOrder->address_id);
+                $gas = Gas::find($myOrder->gas_id);
+                $myOrder->address = $address->address;
+                $myOrder->house_number = $address->house_number;
+                $myOrder->apartment_estate = $address->apartment_estate;
+                $myOrder->landmark = $address->landmark;
+                $myOrder->classification = $gas->classification;
+                $myOrder->weight = $gas->weight;
+                $myOrder->initialPrice = $gas->initialPrice;
+                $myOrder->price = $gas->price;
+                $myOrder->company_name = GasCompany::find($gas->company_id)->name;
+            }
+            return response()->json(
+                [
+                    'success' => true,
+                    'orders' => $myOrders,
+                ], $this->successStatus);
+        }
+    }
+
+    public function register(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'firstname' => ['bail', 'required', 'min:3'],
+            'lastname' => ['bail', 'required', 'min:3'],
+            'email' => ['bail', 'required', 'email', 'unique:users'],
+            'phone' => ['bail', 'required', 'numeric', 'digits:10', 'unique:users'],
+            'password' => ['bail', 'required', 'min:4']
+        ],
+            [
+                'phone.unique' => 'Another user is already registered with the same phone. Please use a different phone number',
+                'email.unique' => 'Another user is already registered with the same email. Please use a different email',
+            ]
+        );
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 401);
+        }
+
+        $user = User::create([
+            'name' => $request->firstname . ' ' . $request->lastname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json(
+            [
+                'success' => true,
+                'user' => $user,
+            ], $this->successStatus);
+    }
+
+    public function order(Request $request)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'user_id' => ['bail', 'required'],
+            'gas_id' => ['bail', 'required'],
+            'order_notes' => ['bail', 'required', 'max:200'],
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 401);
+        }
+        $order = new Order();
+        $order->user_id = $request->user_id;
+        $order->gas_id = $request->gas_id;
+        $order->order_notes = $request->order_notes;
+
+        try {
+            $order->save();
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => "Order has been recorded successfully",
+                ], $this->successStatus);
+        } catch (\Exception $exception) {
+
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Something went wrong. Please try again later",
+                ], $this->successStatus);
+        }
+    }
+}
