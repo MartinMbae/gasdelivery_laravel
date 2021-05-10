@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Gas;
 use App\Models\GasCompany;
+use App\Models\User;
+use App\Models\UserAddress;
+use App\Models\UserOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
@@ -37,18 +40,73 @@ class AdminController extends Controller
         );
     }
 
+
+    public function fetchOrders($limit){
+        if ($limit){
+            $latestOrders = UserOrder::orderBy('created_at','desc')->limit(5)->get();
+        }else{
+            $latestOrders = UserOrder::orderBy('created_at','desc')->limit(50)->get();
+        }
+        foreach ($latestOrders as $latestOrder) {
+            $address = UserAddress::find($latestOrder->address_id);
+            $gas = Gas::find($latestOrder->gas_id);
+            $latestOrder->user = User::find($latestOrder->user_id);
+            $latestOrder->address = $address->address;
+            $latestOrder->house_number = $address->house_number;
+            $latestOrder->apartment_estate = $address->apartment_estate;
+            $latestOrder->landmark = $address->landmark;
+            $latestOrder->classification = $gas->classification;
+            $latestOrder->weight = $gas->weight;
+            $latestOrder->initialPrice = $gas->initialPrice;
+            $latestOrder->price = $gas->price;
+            $latestOrder->date = $gas->created_at->timezone('Africa/Nairobi')->format('d/m/Y g:i a');
+            $latestOrder->company_name = GasCompany::find($gas->company_id)->name;
+            switch($latestOrder->status){
+                case '0':
+                    $stage = 'New';
+                    break;
+
+                case '1':
+                    $stage = 'Complete';
+                    break;
+
+                case '2':
+                    $stage = 'Cancelled';
+                    break;
+                default:
+                    $stage = 'Undefined';
+            }
+            $latestOrder->stage = $stage;
+        }
+
+        return $latestOrders;
+    }
+
     public function index(){
-        return view('dashboard');
+        $ongoingOrders = UserOrder::where('status','0')->count();
+        $completeOrders = UserOrder::where('status','1')->count();
+        $cancelledOrders = UserOrder::where('status','2')->count();
+        $usersCount = User::where('level','0')->count();
+        $latestUsers = User::orderBy('created_at','desc')->limit(5)->get();
+        $latestOrders = $this->fetchOrders(true);
+
+
+        return view('dashboard', compact('ongoingOrders', 'completeOrders', 'cancelledOrders', 'usersCount','latestUsers', 'latestOrders'));
     }
     public function viewCompanies(){
         $companies = GasCompany::orderBy('name','asc')->get();
         return view('companies', compact('companies'));
     }
     public function viewOrders(){
-        return view('orders');
+        $latestOrders = $this->fetchOrders(true);
+        return view('orders', compact('latestOrders'));
     }
     public function viewUsers(){
-        return view('users');
+        $users = User::where('level','0')->limit('100')->get();
+        foreach ($users as $user){
+            $user->orders_count = UserOrder::where('user_id', $user->id)->count();
+        }
+        return view('users', compact('users'));
     }
     public function viewGas(){
         $classifications = $this->gasClassifications();

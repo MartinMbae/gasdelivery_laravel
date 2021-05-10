@@ -11,7 +11,7 @@
                                 <i class="material-icons">content_copy</i>
                             </div>
                             <p class="card-category">Total Users</p>
-                            <h3 class="card-title">50
+                            <h3 class="card-title">{{ $usersCount }}
                             </h3>
                         </div>
                         <div class="card-footer">
@@ -28,7 +28,7 @@
                                 <i class="material-icons">store</i>
                             </div>
                             <p class="card-category">Complete Orders</p>
-                            <h3 class="card-title">45</h3>
+                            <h3 class="card-title">{{ $completeOrders }}</h3>
                         </div>
                         <div class="card-footer">
                             <div class="stats">
@@ -43,12 +43,12 @@
                             <div class="card-icon">
                                 <i class="material-icons">info_outline</i>
                             </div>
-                            <p class="card-category">Pending Orders</p>
-                            <h3 class="card-title">75</h3>
+                            <p class="card-category">Ongoing Orders</p>
+                            <h3 class="card-title">{{ $ongoingOrders }}</h3>
                         </div>
                         <div class="card-footer">
                             <div class="stats">
-                                <a href="#">View Pending Orders</a>
+                                <a href="#">View Ongoing Orders</a>
                             </div>
                         </div>
                     </div>
@@ -60,7 +60,7 @@
                                 <i class="material-icons">info_outline</i>
                             </div>
                             <p class="card-category">Cancelled Orders</p>
-                            <h3 class="card-title">75</h3>
+                            <h3 class="card-title">{{ $cancelledOrders }}</h3>
                         </div>
                         <div class="card-footer">
                             <div class="stats">
@@ -86,12 +86,15 @@
                                 <th>Email</th>
                                 </thead>
                                 <tbody>
+
+                                @foreach($latestUsers as $key=>$latestUser)
                                 <tr>
-                                    <td>1</td>
-                                    <td>Test</td>
-                                    <td>07456456</td>
-                                    <td>email@ddn.com</td>
+                                    <td>{{ $key + 1}}</td>
+                                    <td>{{ $latestUser->name }}</td>
+                                    <td>{{ $latestUser->phone }}</td>
+                                    <td>{{ $latestUser->email }}</td>
                                 </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                         </div>
@@ -108,16 +111,21 @@
                                 <thead class="text-warning">
                                 <th>#</th>
                                 <th>Name</th>
-                                <th>Gas Type</th>
+                                <th>Weight</th>
+                                <th>Service</th>
                                 <th>Status</th>
                                 </thead>
                                 <tbody>
+
+                                @foreach($latestOrders as $key => $latestOrder)
                                 <tr>
-                                    <td>1</td>
-                                    <td>Test</td>
-                                    <td>Test</td>
-                                    <td>Delivered</td>
+                                    <td>{{ $key+1 }}</td>
+                                    <td>{{ $latestOrder->user->name }}</td>
+                                    <td>{{ $latestOrder->weight }} Kg</td>
+                                    <td>{{ $latestOrder->classification }}</td>
+                                    <td>{{ $latestOrder->stage }}</td>
                                 </tr>
+                                @endforeach
                                 </tbody>
                             </table>
                         </div>

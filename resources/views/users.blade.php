@@ -26,33 +26,29 @@
                                             Email
                                         </th>
                                         <th>
-                                            Address
-                                        </th>
-                                        <th>
                                             Orders Made
                                         </th>
                                     </tr></thead>
                                     <tbody>
-                                    <tr>
-                                        <td>
-                                            1
-                                        </td>
-                                        <td>
-                                            Dakota Rice
-                                        </td>
-                                        <td>
-                                            09565656
-                                        </td>
-                                        <td>
-                                           email#ddd.cok
-                                        </td>
-                                        <td>
-                                            23, Near Bridge
-                                        </td>
-                                        <td class="text-success">
-                                            3
-                                        </td>
-                                    </tr>
+                                    @foreach($users as $key=>$user)
+                                        <tr>
+                                            <td>
+                                                {{ $key + 1 }}
+                                            </td>
+                                            <td>
+                                                {{ $user->name }}
+                                            </td>
+                                            <td>
+                                                {{ $user->phone }}
+                                            </td>
+                                            <td>
+                                                {{ $user->email }}
+                                            </td>
+                                            <td class="text-success">
+                                                {{ $user->orders_count }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                     </tbody>
                                 </table>
                             </div>

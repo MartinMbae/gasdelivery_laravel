@@ -23,10 +23,19 @@
                                            Phone
                                         </th>
                                         <th>
-                                            Gas Type
+                                            Weight
                                         </th>
                                         <th>
+                                            Service
+                                        </th>
+                                        <td>
+                                            Quantity
+                                        </td>
+                                        <th>
                                             Amount
+                                        </th>
+                                        <th>
+                                           Total
                                         </th>
                                         <th>
                                             Date
@@ -36,29 +45,22 @@
                                         </th>
                                     </tr></thead>
                                     <tbody>
-                                    <tr>
-                                        <td>
-                                            1
-                                        </td>
-                                        <td>
-                                            Dakota Rice
-                                        </td>
-                                        <td>
-                                            09565656
-                                        </td>
-                                        <td>
-                                            Gas Q
-                                        </td>
-                                        <td class="text-primary">
-                                            1000
-                                        </td>
-                                        <td>
-                                            13 March 2020
-                                        </td>
-                                        <td class="text-success">
-                                            Delivered
-                                        </td>
-                                    </tr>
+
+                                    @foreach($latestOrders as $key => $latestOrder)
+                                        <tr>
+                                            <td>{{ $key+1 }}</td>
+                                            <td>{{ $latestOrder->user->name }}</td>
+                                            <td>{{ $latestOrder->user->phone }}</td>
+                                            <td>{{ $latestOrder->weight }} Kg</td>
+                                            <td>{{ $latestOrder->classification }}</td>
+                                            <td>{{ $latestOrder->count }}</td>
+                                            <td>{{ $latestOrder->price }}</td>
+                                            <td>{{ (int) $latestOrder->price * (int) $latestOrder->count }}</td>
+                                            <td>{{ $latestOrder->date }}</td>
+                                            <td>{{ $latestOrder->stage }}</td>
+                                        </tr>
+                                    @endforeach
+
                                     </tbody>
                                 </table>
                             </div>
