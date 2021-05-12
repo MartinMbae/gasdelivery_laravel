@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified','isAdmin'])->group(function () {
     Route::get('/', [AdminController::class, 'index']);
-    Route::get('orders', [AdminController::class, 'viewOrders']);
+    Route::get('orders/{tag?}', [AdminController::class, 'viewOrders']);
     Route::get('users', [AdminController::class, 'viewUsers']);
     Route::get('gas', [AdminController::class, 'viewGas']);
     Route::get('companies', [AdminController::class, 'viewCompanies']);

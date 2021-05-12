@@ -46,6 +46,11 @@
                                     </tr></thead>
                                     <tbody>
 
+                                    @if(sizeof($latestOrders) == 0)
+                                        <tr>
+                                            <td colspan="4">No Orders found for the selected category</td>
+                                        </tr>
+                                    @endif
                                     @foreach($latestOrders as $key => $latestOrder)
                                         <tr>
                                             <td>{{ $key+1 }}</td>

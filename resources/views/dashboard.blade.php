@@ -16,7 +16,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="stats">
-                                <a href="#">View Users</a>
+                                <a href="{{ url('users') }}">View Users</a>
                             </div>
                         </div>
                     </div>
@@ -32,7 +32,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="stats">
-                                <a href="#">View Complete Orders</a>
+                                <a href="{{ url('orders/completed') }}">View Complete Orders</a>
                             </div>
                         </div>
                     </div>
@@ -48,7 +48,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="stats">
-                                <a href="#">View Ongoing Orders</a>
+                                <a  href="{{ url('orders/ongoing') }}">View Ongoing Orders</a>
                             </div>
                         </div>
                     </div>
@@ -64,7 +64,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="stats">
-                                <a href="#">View Cancelled Orders</a>
+                                <a  href="{{ url('orders/cancelled') }}">View Cancelled Orders</a>
                             </div>
                         </div>
                     </div>

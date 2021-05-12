@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <link rel = "icon"  href="https://img.icons8.com/fluent/50/000000/gas.png" type = "image/x-icon">
+    <link rel = "icon"  href="{{ asset('assets/img/logo.jpg') }}" type = "image/x-icon">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <title>
         {{ env('APP_NAME') }}
@@ -102,7 +102,8 @@
     $(function () {
         var url = window.location;
         $('.sidebar-wrapper ul.nav .nav-item a').filter(function () {
-            return this.href == url;
+
+                return this.href == url;
         }).parent().addClass('active');
 
     });

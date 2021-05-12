@@ -41,11 +41,15 @@ class AdminController extends Controller
     }
 
 
-    public function fetchOrders($limit){
+    public function fetchOrders($limit, $status= null){
         if ($limit){
             $latestOrders = UserOrder::orderBy('created_at','desc')->limit(5)->get();
         }else{
-            $latestOrders = UserOrder::orderBy('created_at','desc')->limit(50)->get();
+            if ($status == null){
+                $latestOrders = UserOrder::orderBy('created_at','desc')->limit(50)->get();
+            }else{
+                $latestOrders = UserOrder::orderBy('created_at','desc')->where('status', $status)->limit(50)->get();
+            }
         }
         foreach ($latestOrders as $latestOrder) {
             $address = UserAddress::find($latestOrder->address_id);
@@ -97,8 +101,27 @@ class AdminController extends Controller
         $companies = GasCompany::orderBy('name','asc')->get();
         return view('companies', compact('companies'));
     }
-    public function viewOrders(){
-        $latestOrders = $this->fetchOrders(true);
+    public function viewOrders($tag = null){
+
+        if ($tag == null){
+            $latestOrders = $this->fetchOrders(true);
+        }else{
+            switch ($tag){
+                case 'ongoing':
+                    $status = '0';
+                    break;
+                case 'completed':
+                    $status = '1';
+                    break;
+                case 'cancelled':
+                    $status = '2';
+                    break;
+                default:
+                    $status = '3';
+            }
+            $latestOrders = $this->fetchOrders(false, $status);
+
+        }
         return view('orders', compact('latestOrders'));
     }
     public function viewUsers(){

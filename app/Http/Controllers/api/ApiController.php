@@ -294,6 +294,7 @@ class ApiController extends Controller
             [
                 'success' => true,
                 'user' => $user,
+                'message' => 'Profile updated successfully',
             ], $this->successStatus);
     }
 

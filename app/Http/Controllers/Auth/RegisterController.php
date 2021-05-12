@@ -75,9 +75,8 @@ class RegisterController extends Controller
 
     }
 
-//    public function showRegistrationForm()
-//    {
-//
-//        return Redirect::to('login');
-//    }
+    public function showRegistrationForm()
+    {
+        return Redirect::to('login');
+    }
 }
