@@ -136,14 +136,14 @@ class ApiController extends Controller
             $order->count = $request->count;
             $order->total_price = $request->total_price;
             $order->order_instructions = $request->order_instructions;
-            try{
+            try {
                 $order->save();
                 return response()->json(
                     [
                         'success' => true,
                         'message' => "Order has been placed successfully",
                     ], $this->successStatus);
-            }catch (\Exception $exception){
+            } catch (\Exception $exception) {
 
                 return response()->json(
                     [
@@ -173,7 +173,7 @@ class ApiController extends Controller
         }
     }
 
-    public function fetchMyOrders($userId)
+    public function fetchAllOrders($userId)
     {
         $user = User::find($userId);
         if ($user == null) {
@@ -183,7 +183,7 @@ class ApiController extends Controller
                     'message' => "Your request was not verified",
                 ], $this->successStatus);
         } else {
-            $myOrders = UserOrder::where('user_id', $userId)->where('status','0')->get();
+            $myOrders = UserOrder::where('user_id', $userId)->get();
 
             foreach ($myOrders as $myOrder) {
                 $address = UserAddress::find($myOrder->address_id);
@@ -197,6 +197,25 @@ class ApiController extends Controller
                 $myOrder->initialPrice = $gas->initialPrice;
                 $myOrder->price = $gas->price;
                 $myOrder->company_name = GasCompany::find($gas->company_id)->name;
+                $myOrder->created_at_parsed = $myOrder->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
+
+                switch ($myOrder->status) {
+                    case '0':
+                        $status = 'Ongoing';
+                        break;
+                    case '1':
+                        $status = 'Completed';
+                        break;
+                    case '2':
+                        $status = 'Cancelled';
+                        break;
+                    case '3':
+                        $status = 'Rejected';
+                        break;
+                    default:
+                        $status = "Undefined";
+                }
+                $myOrder->status = $status;
             }
             return response()->json(
                 [
@@ -204,6 +223,78 @@ class ApiController extends Controller
                     'orders' => $myOrders,
                 ], $this->successStatus);
         }
+    }
+
+    public function fetchMyOngoingOrders($userId)
+    {
+        $user = User::find($userId);
+        if ($user == null) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Your request was not verified",
+                ], $this->successStatus);
+        } else {
+            $myOrders = UserOrder::where('user_id', $userId)->where('status', '0')->get();
+
+            foreach ($myOrders as $myOrder) {
+                $address = UserAddress::find($myOrder->address_id);
+                $gas = Gas::find($myOrder->gas_id);
+                $myOrder->address = $address->address;
+                $myOrder->house_number = $address->house_number;
+                $myOrder->apartment_estate = $address->apartment_estate;
+                $myOrder->landmark = $address->landmark;
+                $myOrder->classification = $gas->classification;
+                $myOrder->weight = $gas->weight;
+                $myOrder->initialPrice = $gas->initialPrice;
+                $myOrder->price = $gas->price;
+                $myOrder->company_name = GasCompany::find($gas->company_id)->name;
+                $myOrder->created_at_parsed = $myOrder->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
+
+                $myOrder->status = 'Ongoing';
+            }
+            return response()->json(
+                [
+                    'success' => true,
+                    'orders' => $myOrders,
+                ], $this->successStatus);
+        }
+    }
+
+    public function updateDetails(Request $request, $user_id)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => ['bail', 'required', 'min:3'],
+            'email' => ['bail', 'required', 'email', 'unique:users,email,'.$user_id],
+            'phone' => ['bail', 'required', 'numeric', 'digits:10', 'unique:users,phone,'.$user_id],
+        ],
+            [
+                'phone.unique' => 'Another user is already registered with the same phone. Please use a different phone number',
+                'email.unique' => 'Another user is already registered with the same email. Please use a different email',
+            ]
+        );
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 401);
+        }
+        $user = User::find($user_id);
+        if ($user == null) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Your request was not verified",
+                ], $this->successStatus);
+        }
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->phone = $request->phone;
+        $user->save();
+
+        return response()->json(
+            [
+                'success' => true,
+                'user' => $user,
+            ], $this->successStatus);
     }
 
     public function register(Request $request): JsonResponse
