@@ -28,5 +28,10 @@ Route::get('get_orders/{user_id}', [ApiController::class, 'fetchMyOngoingOrders'
 Route::get('get_all_orders/{user_id}', [ApiController::class, 'fetchAllOrders']);
 Route::post('update_user/{user_id}', [ApiController::class, 'updateDetails']);
 Route::post('order', [ApiController::class, 'postOrder']);
+Route::post('pay', [ApiController::class, 'payForOrder']);
+//Route::post('confirmation/{identifier}', [MpesaController::class, 'mpesaConfirmation']);
+
+//Route::post('confirmation/{identifier}', 'App\Http\Controllers\api\MpesaController@mpesaConfirmation');
+Route::post('confirmation/{identifier}', 'App\Http\Controllers\api\MpesaController@mpesaConfirmation');
 
 

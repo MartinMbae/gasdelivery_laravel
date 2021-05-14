@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Gas;
 use App\Models\GasCompany;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserOrder;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ApiController extends Controller
 {
@@ -265,8 +267,8 @@ class ApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['bail', 'required', 'min:3'],
-            'email' => ['bail', 'required', 'email', 'unique:users,email,'.$user_id],
-            'phone' => ['bail', 'required', 'numeric', 'digits:10', 'unique:users,phone,'.$user_id],
+            'email' => ['bail', 'required', 'email', 'unique:users,email,' . $user_id],
+            'phone' => ['bail', 'required', 'numeric', 'digits:10', 'unique:users,phone,' . $user_id],
         ],
             [
                 'phone.unique' => 'Another user is already registered with the same phone. Please use a different phone number',
@@ -361,5 +363,76 @@ class ApiController extends Controller
                     'message' => "Something went wrong. Please try again later",
                 ], $this->successStatus);
         }
+    }
+
+    public function payForOrder(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'user_id' => ['bail', 'required'],
+            'gas_id' => ['bail', 'required'],
+            'phone' => ['bail', 'required', 'numeric', 'digits:10'],
+            'count' => ['bail', 'required', 'numeric', 'max:10'],
+            'total_price' => ['bail', 'required',],
+        ]);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 401);
+        }
+        $random = Str::random(20) . '_' . $request->user_id . '_' . $request->gas_id;
+        $payment = new Payment();
+        $payment->identifier = $random;
+        $payment->user_id = $request->user_id;
+        $payment->user_phone = $request->phone;
+        $payment->gas_id = $request->gas_id;
+        $payment->count = $request->count;
+        $payment->amount = $request->total_price;
+        $payment->save();
+
+        $mpesaController = new MpesaController();
+        $response = $mpesaController->customerMpesaSTKPush($random, $request->phone, $request->total_price);
+
+        $decodedResponse = json_decode($response);
+        $successFull = false;
+        $errorMessage = "Some unknown error occurred while processing you transaction. Please try again";
+
+        if (isset($decodedResponse->ResponseCode)) {
+            $response_code = $decodedResponse->ResponseCode;
+            if ($response_code == 0) {
+                $successFull = true;
+                $merchant_request_id = $decodedResponse->MerchantRequestID;
+                $check_out_request_id = $decodedResponse->CheckoutRequestID;
+                $payment->stk_response_code = $response_code;
+                $payment->stk_merchant_request_id = $merchant_request_id;
+                $payment->stk_checkout_request_id = $check_out_request_id;
+            } else {
+                $payment->stk_response_code = $response_code;
+                $payment->stk_error_message = "$response";
+            }
+        } elseif (isset($decodedResponse->errorCode)) {
+            try {
+                $errorCode = $decodedResponse->errorCode;
+                $errorMessage = $decodedResponse->errorMessage;
+                $payment->stk_error_code = $errorCode;
+                $payment->stk_error_message = $errorMessage;
+            } catch (\Exception $exception) {
+                $payment->stk_server_error = Str::substr($exception->getMessage(), 0, 49);
+            }
+        } else {
+            $payment->stk_error_message = "$response";
+        }
+        $payment->save();
+
+        if ($successFull) {
+            return response()->json([
+                'success' => true,
+                'message' => "An STK push has been sent to your phone ($request->phone). Enter your PIN to complete transaction."
+            ], $this->successStatus);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => "Something went wrong. Try again later. Error message: \"$errorMessage\""
+            ], $this->successStatus);
+        }
+
+
     }
 }
