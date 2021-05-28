@@ -7,9 +7,7 @@ use App\Models\DbError;
 use App\Models\Payment;
 use App\Models\PaymentResponse;
 use App\Models\UnverifiedPayments;
-use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -17,7 +15,7 @@ class MpesaController extends Controller
 {
     private function callBackBaseUrl()
     {
-        return 'https://932e6bff82f6.ngrok.io';
+        return 'https://asapenergies.co.ke';
     }
 
     public function generateAccessToken()
@@ -35,9 +33,7 @@ class MpesaController extends Controller
         $curl_response = curl_exec($curl);
         try {
             $access_token = json_decode($curl_response);
-
             if (isset($access_token->access_token)) {
-                echo $access_token->access_token;
                 return $access_token->access_token;
             } else {
                 return "Failed";
@@ -80,16 +76,11 @@ class MpesaController extends Controller
             'CallBackURL' => $this->callBackBaseUrl() . "/api/confirmation/$identifier",
             'AccountReference' => "H-lab tutorial",
             'TransactionDesc' => "Testing stk push on sandbox"
-        ];//https://20a6ce4a4019.ngrok.io/api/confirmation/Gpu7kk20Ym6mZWQSDM09_2_4
-
-//        dd($curl_post_data);
-
+        ];
         $data_string = json_encode($curl_post_data);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POST, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
-
-        print_r(curl_exec($curl));
         return curl_exec($curl);
     }
 
