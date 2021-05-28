@@ -19,7 +19,6 @@ class CreatePaymentsTable extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('order_id');
             $table->string('user_phone', 20);
-            $table->string('count', 10);
             $table->string('amount', 10);
             $table->string('stk_response_code', 20)->nullable();
             $table->string('stk_merchant_request_id', 50)->nullable();

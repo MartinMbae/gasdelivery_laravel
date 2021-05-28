@@ -21,7 +21,7 @@ class CreateUserOrdersTable extends Migration
             $table->string('count',2);
             $table->string('total_price',20);
             $table->string('order_instructions', 200)->nullable();
-            $table->enum('status', array(0,1,2,3));//0->new order, 1->completed, 2->Cancelled, 3->Rejected Order
+            $table->enum('status', array(0,1,2,3,4));//0->new order, 1->completed, 2->Cancelled, 3->Rejected Order// 4->paid
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');

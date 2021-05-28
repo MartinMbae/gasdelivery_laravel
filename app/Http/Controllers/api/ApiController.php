@@ -140,9 +140,12 @@ class ApiController extends Controller
             $order->order_instructions = $request->order_instructions;
             try {
                 $order->save();
+
+                $order->refresh();
                 return response()->json(
                     [
                         'success' => true,
+                        'order_id' => $order->id,
                         'message' => "Order has been placed successfully",
                     ], $this->successStatus);
             } catch (\Exception $exception) {
@@ -214,6 +217,10 @@ class ApiController extends Controller
                     case '3':
                         $status = 'Rejected';
                         break;
+
+                    case '4':
+                        $status = 'Paid';
+                        break;
                     default:
                         $status = "Undefined";
                 }
@@ -237,7 +244,7 @@ class ApiController extends Controller
                     'message' => "Your request was not verified",
                 ], $this->successStatus);
         } else {
-            $myOrders = UserOrder::where('user_id', $userId)->where('status', '0')->get();
+            $myOrders = UserOrder::where('user_id', $userId)->where('status', '0')->orWhere('status','4')->get();
 
             foreach ($myOrders as $myOrder) {
                 $address = UserAddress::find($myOrder->address_id);
@@ -253,7 +260,27 @@ class ApiController extends Controller
                 $myOrder->company_name = GasCompany::find($gas->company_id)->name;
                 $myOrder->created_at_parsed = $myOrder->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
 
-                $myOrder->status = 'Ongoing';
+                switch ($myOrder->status) {
+                    case '0':
+                        $status = 'Ongoing';
+                        break;
+                    case '1':
+                        $status = 'Completed';
+                        break;
+                    case '2':
+                        $status = 'Cancelled';
+                        break;
+                    case '3':
+                        $status = 'Rejected';
+                        break;
+
+                    case '4':
+                        $status = 'Paid';
+                        break;
+                    default:
+                        $status = "Undefined";
+                }
+                $myOrder->status = $status;
             }
             return response()->json(
                 [
@@ -350,9 +377,11 @@ class ApiController extends Controller
 
         try {
             $order->save();
+            $order->refresh();
             return response()->json(
                 [
                     'success' => true,
+                    'order_id' => $order->id,
                     'message' => "Order has been recorded successfully",
                 ], $this->successStatus);
         } catch (\Exception $exception) {
@@ -371,24 +400,22 @@ class ApiController extends Controller
             'user_id' => ['bail', 'required'],
             'order_id' => ['bail', 'required'],
             'phone' => ['bail', 'required', 'numeric', 'digits:10'],
-            'count' => ['bail', 'required', 'numeric', 'max:10'],
-            'total_price' => ['bail', 'required',],
         ]);
         if ($validator->fails()) {
             return response()->json($validator->errors(), 401);
         }
-        $random = Str::random(20) . '_' . $request->user_id . '_' . $request->gas_id;
+        $random = Str::random(20) . '_' . $request->order_id;
         $payment = new Payment();
         $payment->identifier = $random;
         $payment->user_id = $request->user_id;
         $payment->user_phone = $request->phone;
         $payment->order_id = $request->order_id;
-        $payment->count = $request->count;
-        $payment->amount = $request->total_price;
+        $userOrder = UserOrder::find($payment->order_id);
+        $payment->amount = $userOrder->total_price;
         $payment->save();
 
         $mpesaController = new MpesaController();
-        $response = $mpesaController->customerMpesaSTKPush($random, $request->phone, $request->total_price);
+        $response = $mpesaController->customerMpesaSTKPush($random, $request->phone, '2');
 
         $decodedResponse = json_decode($response);
         $successFull = false;

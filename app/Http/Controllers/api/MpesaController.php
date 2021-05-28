@@ -7,6 +7,7 @@ use App\Models\DbError;
 use App\Models\Payment;
 use App\Models\PaymentResponse;
 use App\Models\UnverifiedPayments;
+use App\Models\UserOrder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -97,19 +98,12 @@ class MpesaController extends Controller
         } catch (\Exception $exception) {
         }
 
-
         if ($paymentResponse->callback_response_code != null) {
             echo "Transaction has already been processed";
             return;
         }
 
-
-        echo 'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh';
-
-//        return;
-
         $content = json_decode($data);
-
         $payment = Payment::where('identifier', $identifier)->first();
         if ($payment == null) {
             $unverifiedPayments = new UnverifiedPayments();
@@ -167,6 +161,12 @@ class MpesaController extends Controller
         $payment->stk_status = $stk_status;
         try {
             $payment->save();
+
+            $userOrder = UserOrder::find($payment->order_id);
+            $userOrder->status = '4';
+            $userOrder->save();
+
+
         } catch (\Exception $exception) {
             $dbError = new DbError();
             $dbError->stage = "STK CallBAck Decoding";
@@ -180,7 +180,7 @@ class MpesaController extends Controller
     }
 
     public function test(){
-      $result =   $this->customerMpesaSTKPush('sssss', '0705537065', '1');
-      dd($result);
+//      $result =   $this->customerMpesaSTKPush('sssss', '0705537065', '1');
+//      dd($result);
     }
 }

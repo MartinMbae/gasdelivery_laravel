@@ -20,7 +20,7 @@ class AdminController extends Controller
      */
     public function __construct()
     {
-        $this->middleware(['auth','verified']);
+        $this->middleware(['auth', 'verified']);
     }
 
     private function gasClassifications(): array
@@ -32,6 +32,7 @@ class AdminController extends Controller
             'Gas Cylinder only',
         );
     }
+
     private function gasAvailability(): array
     {
         return array(
@@ -41,14 +42,15 @@ class AdminController extends Controller
     }
 
 
-    public function fetchOrders($limit, $status= null){
-        if ($limit){
-            $latestOrders = UserOrder::orderBy('created_at','desc')->paginate(10);
-        }else{
-            if ($status == null){
-                $latestOrders = UserOrder::orderBy('created_at','desc')->paginate(10);
-            }else{
-                $latestOrders = UserOrder::orderBy('created_at','desc')->where('status', $status)->paginate(10);
+    public function fetchOrders($limit, $status = null)
+    {
+        if ($limit) {
+            $latestOrders = UserOrder::orderBy('created_at', 'desc')->paginate(10);
+        } else {
+            if ($status == null) {
+                $latestOrders = UserOrder::orderBy('created_at', 'desc')->paginate(10);
+            } else {
+                $latestOrders = UserOrder::orderBy('created_at', 'desc')->where('status', $status)->paginate(10);
             }
         }
         foreach ($latestOrders as $latestOrder) {
@@ -65,7 +67,7 @@ class AdminController extends Controller
             $latestOrder->price = $gas->price;
             $latestOrder->date = $latestOrder->created_at->timezone('Africa/Nairobi')->format('d/m/Y g:i a');
             $latestOrder->company_name = GasCompany::find($gas->company_id)->name;
-            switch($latestOrder->status){
+            switch ($latestOrder->status) {
                 case '0':
                     $stage = 'New';
                     break;
@@ -77,6 +79,10 @@ class AdminController extends Controller
                 case '2':
                     $stage = 'Cancelled';
                     break;
+
+                case '4':
+                    $stage = 'Paid';
+                    break;
                 default:
                     $stage = 'Undefined';
             }
@@ -86,27 +92,32 @@ class AdminController extends Controller
         return $latestOrders;
     }
 
-    public function index(){
-        $ongoingOrders = UserOrder::where('status','0')->count();
-        $completeOrders = UserOrder::where('status','1')->count();
-        $cancelledOrders = UserOrder::where('status','2')->count();
-        $usersCount = User::where('level','0')->count();
-        $latestUsers = User::orderBy('created_at','desc')->limit(5)->get();
+    public function index()
+    {
+        $ongoingOrders = UserOrder::where('status', '0')->count();
+        $completeOrders = UserOrder::where('status', '1')->count();
+        $cancelledOrders = UserOrder::where('status', '2')->count();
+        $usersCount = User::where('level', '0')->count();
+        $latestUsers = User::orderBy('created_at', 'desc')->limit(5)->get();
         $latestOrders = $this->fetchOrders(true);
 
 
-        return view('dashboard', compact('ongoingOrders', 'completeOrders', 'cancelledOrders', 'usersCount','latestUsers', 'latestOrders'));
+        return view('dashboard', compact('ongoingOrders', 'completeOrders', 'cancelledOrders', 'usersCount', 'latestUsers', 'latestOrders'));
     }
-    public function viewCompanies(){
-        $companies = GasCompany::orderBy('name','asc')->get();
+
+    public function viewCompanies()
+    {
+        $companies = GasCompany::orderBy('name', 'asc')->get();
         return view('companies', compact('companies'));
     }
-    public function viewOrders($tag = null){
 
-        if ($tag == null){
+    public function viewOrders($tag = null)
+    {
+
+        if ($tag == null) {
             $latestOrders = $this->fetchOrders(true);
-        }else{
-            switch ($tag){
+        } else {
+            switch ($tag) {
                 case 'ongoing':
                     $status = '0';
                     break;
@@ -124,30 +135,35 @@ class AdminController extends Controller
         }
         return view('orders', compact('latestOrders'));
     }
-    public function viewUsers(){
-        $users = User::where('level','0')->limit('100')->get();
-        foreach ($users as $user){
+
+    public function viewUsers()
+    {
+        $users = User::where('level', '0')->limit('100')->get();
+        foreach ($users as $user) {
             $user->orders_count = UserOrder::where('user_id', $user->id)->count();
         }
         return view('users', compact('users'));
     }
-    public function viewGas(){
+
+    public function viewGas()
+    {
         $classifications = $this->gasClassifications();
         $availability = $this->gasAvailability();
-        $companies = GasCompany::orderBy('name','asc')->get();
+        $companies = GasCompany::orderBy('name', 'asc')->get();
         $gasses = Gas::paginate(10);
-        foreach ($gasses as $gas){
+        foreach ($gasses as $gas) {
             $gas->companyName = GasCompany::find($gas->company_id)->name;
         }
         return view('gas', compact('companies', 'classifications', 'gasses', 'availability'));
     }
 
 
-    public function addCompany(Request $request){
+    public function addCompany(Request $request)
+    {
 
-        Validator::make($request->all(),[
-            'name' => ['required', 'min:3','max:20','unique:gas_companies'],
-        ],[
+        Validator::make($request->all(), [
+            'name' => ['required', 'min:3', 'max:20', 'unique:gas_companies'],
+        ], [
             'name.unique' => 'Another company with a similar name already exist.'
         ])->validateWithBag('gas');
 
@@ -156,8 +172,10 @@ class AdminController extends Controller
         $company->save();
         return Redirect::back()->with('success', 'Company has been added successfully');
     }
-    public function addGas(Request $request){
-        Validator::make($request->all(),[
+
+    public function addGas(Request $request)
+    {
+        Validator::make($request->all(), [
             'company_id' => ['required'],
             'classification' => ['required'],
             'weight' => ['required', 'numeric'],
@@ -177,15 +195,16 @@ class AdminController extends Controller
         return Redirect::back()->with('success', 'Gas has been added successfully');
     }
 
-    public function editCompany(Request $request){
+    public function editCompany(Request $request)
+    {
 
-        $company =  GasCompany::find($request->id);
-        if ($company == null){
+        $company = GasCompany::find($request->id);
+        if ($company == null) {
             return Redirect::back()->with('error', 'Something went wrong. Try again');
         }
-        Validator::make($request->all(),[
-            'name' => ['required', 'min:3','max:20','unique:gas_companies,name,'.$company->id],
-        ],[
+        Validator::make($request->all(), [
+            'name' => ['required', 'min:3', 'max:20', 'unique:gas_companies,name,' . $company->id],
+        ], [
             'name.unique' => 'Another company with a similar name already exist.'
         ])->validateWithBag('gas_edit');
 
@@ -194,12 +213,13 @@ class AdminController extends Controller
         return Redirect::back()->with('success', 'Company has been updated successfully');
     }
 
-    public function editGas(Request $request){
-        $gas =  Gas::find($request->gas_id);
-        if ($gas == null){
+    public function editGas(Request $request)
+    {
+        $gas = Gas::find($request->gas_id);
+        if ($gas == null) {
             return Redirect::back()->with('error', 'Something went wrong. Try again');
         }
-        Validator::make($request->all(),[
+        Validator::make($request->all(), [
             'company_id' => ['required'],
             'classification' => ['required'],
             'weight' => ['required', 'numeric'],
