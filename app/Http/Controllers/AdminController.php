@@ -43,12 +43,12 @@ class AdminController extends Controller
 
     public function fetchOrders($limit, $status= null){
         if ($limit){
-            $latestOrders = UserOrder::orderBy('created_at','desc')->limit(5)->get();
+            $latestOrders = UserOrder::orderBy('created_at','desc')->paginate(10);
         }else{
             if ($status == null){
-                $latestOrders = UserOrder::orderBy('created_at','desc')->limit(50)->get();
+                $latestOrders = UserOrder::orderBy('created_at','desc')->paginate(10);
             }else{
-                $latestOrders = UserOrder::orderBy('created_at','desc')->where('status', $status)->limit(50)->get();
+                $latestOrders = UserOrder::orderBy('created_at','desc')->where('status', $status)->paginate(10);
             }
         }
         foreach ($latestOrders as $latestOrder) {
@@ -63,7 +63,7 @@ class AdminController extends Controller
             $latestOrder->weight = $gas->weight;
             $latestOrder->initialPrice = $gas->initialPrice;
             $latestOrder->price = $gas->price;
-            $latestOrder->date = $gas->created_at->timezone('Africa/Nairobi')->format('d/m/Y g:i a');
+            $latestOrder->date = $latestOrder->created_at->timezone('Africa/Nairobi')->format('d/m/Y g:i a');
             $latestOrder->company_name = GasCompany::find($gas->company_id)->name;
             switch($latestOrder->status){
                 case '0':

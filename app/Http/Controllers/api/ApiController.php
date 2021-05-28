@@ -369,7 +369,7 @@ class ApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'user_id' => ['bail', 'required'],
-            'gas_id' => ['bail', 'required'],
+            'order_id' => ['bail', 'required'],
             'phone' => ['bail', 'required', 'numeric', 'digits:10'],
             'count' => ['bail', 'required', 'numeric', 'max:10'],
             'total_price' => ['bail', 'required',],
@@ -382,7 +382,7 @@ class ApiController extends Controller
         $payment->identifier = $random;
         $payment->user_id = $request->user_id;
         $payment->user_phone = $request->phone;
-        $payment->gas_id = $request->gas_id;
+        $payment->order_id = $request->order_id;
         $payment->count = $request->count;
         $payment->amount = $request->total_price;
         $payment->save();

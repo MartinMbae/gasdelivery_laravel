@@ -65,16 +65,16 @@ class MpesaController extends Controller
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization:Bearer ' . $this->generateAccessToken()));
         $curl_post_data = [
             //Fill in the request parameters with valid values
-            'BusinessShortCode' => '7855029',
+            'BusinessShortCode' => '7855029',//5096743
             'Password' => $this->lipaNaMpesaPassword(),
             'Timestamp' => Carbon::rawParse('now')->format('YmdHms'),
-            'TransactionType' => 'CustomerPayBillOnline',
+            'TransactionType' => 'CustomerBuyGoodsOnline',
             'Amount' => '1',
             'PartyA' => $senderPhoneNumber, // replace this with your phone number
-            'PartyB' => '7855029',
+            'PartyB' => '5096743',
             'PhoneNumber' => $senderPhoneNumber, // replace this with your phone number
             'CallBackURL' => $this->callBackBaseUrl() . "/api/confirmation/$identifier",
-            'AccountReference' => "H-lab tutorial",
+            'AccountReference' => "ASAP",
             'TransactionDesc' => "Testing stk push on sandbox"
         ];
         $data_string = json_encode($curl_post_data);
@@ -96,6 +96,13 @@ class MpesaController extends Controller
             $paymentResponse->save();
         } catch (\Exception $exception) {
         }
+
+
+        if ($paymentResponse->callback_response_code != null) {
+            echo "Transaction has already been processed";
+            return;
+        }
+
 
         echo 'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh';
 
@@ -140,8 +147,17 @@ class MpesaController extends Controller
             $amount = $content->Body->stkCallback->CallbackMetadata->Item[0]->Value;
             $mpesa_receipt = $content->Body->stkCallback->CallbackMetadata->Item[1]->Value;
             $transaction_date = $content->Body->stkCallback->CallbackMetadata->Item[3]->Value;
-            $phone_number = $content->Body->stkCallback->CallbackMetadata->Item[4]->Value;
-
+            try {
+                $callbackItems = $content->Body->stkCallback->CallbackMetadata->Item;
+                if (sizeof($callbackItems) == 4){
+                    $transaction_date = $content->Body->stkCallback->CallbackMetadata->Item[2]->Value;
+                    $phone_number = $content->Body->stkCallback->CallbackMetadata->Item[3]->Value;
+                }else{
+                    $phone_number = $content->Body->stkCallback->CallbackMetadata->Item[4]->Value;
+                }
+            } catch (\Exception $exception) {
+                $phone_number = '';
+            }
             //Save To Database
             $payment->callback_phone = $phone_number;
             $payment->callback_amount = $amount;

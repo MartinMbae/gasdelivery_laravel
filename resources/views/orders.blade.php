@@ -38,7 +38,7 @@
                                            Total
                                         </th>
                                         <th>
-                                            Date
+                                            Order Date
                                         </th>
                                         <th>
                                             Status
@@ -53,7 +53,7 @@
                                     @endif
                                     @foreach($latestOrders as $key => $latestOrder)
                                         <tr>
-                                            <td>{{ $key+1 }}</td>
+                                            <td>{{ $latestOrders->firstItem() + $key }}</td>
                                             <td>{{ $latestOrder->user->name }}</td>
                                             <td>{{ $latestOrder->user->phone }}</td>
                                             <td>{{ $latestOrder->weight }} Kg</td>
@@ -68,6 +68,10 @@
 
                                     </tbody>
                                 </table>
+
+                                    {{ $latestOrders->links() }}
+
+
                             </div>
                         </div>
                     </div>
