@@ -17,7 +17,7 @@ class MpesaController extends Controller
 {
     private function callBackBaseUrl()
     {
-        return 'https://33346ea06901.ngrok.io';
+        return 'https://932e6bff82f6.ngrok.io';
     }
 
     public function generateAccessToken()
@@ -25,7 +25,7 @@ class MpesaController extends Controller
         $consumer_key = env("SAF_CONSUMER_KEY");
         $consumer_secret = env("SAF_CONSUMER_SECRET");
         $credentials = base64_encode($consumer_key . ":" . $consumer_secret);
-        $url = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
+        $url = "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array("Authorization: Basic " . $credentials));
@@ -37,11 +37,13 @@ class MpesaController extends Controller
             $access_token = json_decode($curl_response);
 
             if (isset($access_token->access_token)) {
+                echo $access_token->access_token;
                 return $access_token->access_token;
             } else {
                 return "Failed";
             }
         } catch (\Exception $exception) {
+            echo "errorrr";
             return "Error";
         }
     }
@@ -49,10 +51,11 @@ class MpesaController extends Controller
     public function lipaNaMpesaPassword()
     {
         $lipa_time = Carbon::rawParse('now')->format('YmdHms');
-        $passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
-        $BusinessShortCode = 174379;
+        $passkey = "e8e1d85e29ab84fef2f88d1ccf76c2b2df844b6b7bc5a5d5bda86d97ec1ff37c";
+        $BusinessShortCode = '7855029';
         $timestamp = $lipa_time;
         $lipa_na_mpesa_password = base64_encode($BusinessShortCode . $passkey . $timestamp);
+//        echo $lipa_na_mpesa_password;
         return $lipa_na_mpesa_password;
     }
 
@@ -60,38 +63,44 @@ class MpesaController extends Controller
     {
 
         $senderPhoneNumber = '254' . substr($senderPhoneNumber, 1);
-
-        $url = 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
+        $url = 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization:Bearer ' . $this->generateAccessToken()));
         $curl_post_data = [
             //Fill in the request parameters with valid values
-            'BusinessShortCode' => 174379,
+            'BusinessShortCode' => '7855029',
             'Password' => $this->lipaNaMpesaPassword(),
             'Timestamp' => Carbon::rawParse('now')->format('YmdHms'),
             'TransactionType' => 'CustomerPayBillOnline',
-            'Amount' => 1,
+            'Amount' => '1',
             'PartyA' => $senderPhoneNumber, // replace this with your phone number
-            'PartyB' => 174379,
+            'PartyB' => '7855029',
             'PhoneNumber' => $senderPhoneNumber, // replace this with your phone number
             'CallBackURL' => $this->callBackBaseUrl() . "/api/confirmation/$identifier",
             'AccountReference' => "H-lab tutorial",
             'TransactionDesc' => "Testing stk push on sandbox"
         ];//https://20a6ce4a4019.ngrok.io/api/confirmation/Gpu7kk20Ym6mZWQSDM09_2_4
-//    dd($curl_post_data);
+
+//        dd($curl_post_data);
+
         $data_string = json_encode($curl_post_data);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($curl, CURLOPT_POST, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
+
+        print_r(curl_exec($curl));
         return curl_exec($curl);
     }
 
     public function mpesaConfirmation(Request $request, $identifier)
     {
+
+        $data = $request->getContent();
+
         $paymentResponse = new PaymentResponse();
         $paymentResponse->identifier = $identifier;
-        $paymentResponse->message = 'Test jjjjjj bbbbbb';
+        $paymentResponse->message = $data;
         try {
             $paymentResponse->save();
         } catch (\Exception $exception) {
@@ -99,9 +108,8 @@ class MpesaController extends Controller
 
         echo 'hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh';
 
-        return;
+//        return;
 
-        $data = $request->getContent();
         $content = json_decode($data);
 
         $payment = Payment::where('identifier', $identifier)->first();
@@ -162,5 +170,10 @@ class MpesaController extends Controller
             } catch (\Exception $exception) {
             }
         }
+    }
+
+    public function test(){
+      $result =   $this->customerMpesaSTKPush('sssss', '0705537065', '1');
+      dd($result);
     }
 }

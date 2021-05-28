@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\api\MpesaController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -29,4 +30,5 @@ Route::middleware(['auth', 'verified','isAdmin'])->group(function () {
 });
 Auth::routes(['verify' => true]);
 
+Route::get('test', [MpesaController::class, 'test']);
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

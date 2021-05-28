@@ -32,6 +32,6 @@ Route::post('pay', [ApiController::class, 'payForOrder']);
 //Route::post('confirmation/{identifier}', [MpesaController::class, 'mpesaConfirmation']);
 
 //Route::post('confirmation/{identifier}', 'App\Http\Controllers\api\MpesaController@mpesaConfirmation');
-Route::post('confirmation/{identifier}', 'App\Http\Controllers\api\MpesaController@mpesaConfirmation');
-
+//Route::post('confirmation/{identifier}', 'App\Http\Controllers\api\MpesaController@mpesaConfirmation');
+Route::post('confirmation/{identifier}', [\App\Http\Controllers\api\MpesaController::class, 'mpesaConfirmation']);
 
