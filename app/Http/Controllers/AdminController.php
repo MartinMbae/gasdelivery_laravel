@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Gas;
 use App\Models\GasCompany;
+use App\Models\Order;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 
@@ -45,7 +48,7 @@ class AdminController extends Controller
     public function fetchOrders($limit, $status = null)
     {
         if ($limit) {
-            $latestOrders = UserOrder::orderBy('created_at', 'desc')->paginate(10);
+            $latestOrders = UserOrder::orderBy('created_at', 'desc')->paginate(5);
         } else {
             if ($status == null) {
                 $latestOrders = UserOrder::orderBy('created_at', 'desc')->paginate(10);
@@ -173,6 +176,28 @@ class AdminController extends Controller
         return Redirect::back()->with('success', 'Company has been added successfully');
     }
 
+    public function completeOrder(Request $request)
+    {
+        $order = UserOrder::find($request->order_id);
+        if ($order == null){
+            return Redirect::back()->with('error', 'Something went wrong. Try again');
+        }else{
+            $order->status = '1';
+            $order->save();
+            return Redirect::back()->with('success', 'Order has been marked as complete');
+        }
+    }
+    public function cancelOrder(Request $request)
+    {
+        $order = UserOrder::find($request->order_id);
+        if ($order == null){
+            return Redirect::back()->with('error', 'Something went wrong. Try again');
+        }else{
+            $order->status = '2';
+            $order->save();
+            return Redirect::back()->with('success', 'Order has been marked as cancelled');
+        }
+    }
     public function addGas(Request $request)
     {
         Validator::make($request->all(), [
@@ -237,5 +262,29 @@ class AdminController extends Controller
         $gas->save();
 
         return Redirect::back()->with('success', 'Gas has been updated successfully');
+    }
+
+    public function changePassword(Request $request){
+
+      $validator =  Validator::make($request->all(), [
+            'old' =>  [
+                'required', function ($attribute, $value, $fail) {
+                    if (!Hash::check($value, Auth::user()->password)) {
+                        $fail('Old Password didn\'t match');
+                    }
+                },
+            ],
+            'new' => ['required', 'confirmed'],
+        ]);
+
+
+        if ($validator->fails()) {
+            return Redirect::back()->with('error', $validator->errors());
+        }
+
+        $user = User::find(Auth::id());
+        $user->password = Hash::make($request->new);
+        $user->save();
+        return Redirect::back()->with('success', 'Password has been updated');
     }
 }

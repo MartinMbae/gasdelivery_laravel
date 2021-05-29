@@ -24,9 +24,12 @@ Route::middleware(['auth', 'verified','isAdmin'])->group(function () {
     Route::get('gas', [AdminController::class, 'viewGas']);
     Route::get('companies', [AdminController::class, 'viewCompanies']);
     Route::post('addCompany', [AdminController::class, 'addCompany']);
+    Route::post('change_password', [AdminController::class, 'changePassword']);
     Route::post('editCompany', [AdminController::class, 'editCompany']);
     Route::post('addGas', [AdminController::class, 'addGas']);
     Route::post('editGas', [AdminController::class, 'editGas']);
+    Route::post('complete_order', [AdminController::class, 'completeOrder']);
+    Route::post('cancel_order', [AdminController::class, 'cancelOrder']);
 });
 Auth::routes(['verify' => true]);
 
