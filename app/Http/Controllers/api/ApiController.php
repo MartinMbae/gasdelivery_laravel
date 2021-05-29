@@ -246,6 +246,10 @@ class ApiController extends Controller
                 ], $this->successStatus);
         } else {
             $payments = Payment::where('callback_response_code','0')->orderBy('created_at','desc')->limit(30)->get();
+
+          foreach ($payments as $payment){
+              $payment->created_at_parsed = $payment->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
+          }
             return response()->json(
                 [
                     'success' => true,
