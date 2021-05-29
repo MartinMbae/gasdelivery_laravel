@@ -234,6 +234,26 @@ class ApiController extends Controller
         }
     }
 
+
+    public function fetchAllPayments($userId)
+    {
+        $user = User::find($userId);
+        if ($user == null) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "Your request was not verified",
+                ], $this->successStatus);
+        } else {
+            $payments = Payment::where('callback_response_code','0')->orderBy('created_at','desc')->limit(30)->get();
+            return response()->json(
+                [
+                    'success' => true,
+                    'payments' => $payments,
+                ], $this->successStatus);
+        }
+    }
+
     public function fetchMyOngoingOrders($userId)
     {
         $user = User::find($userId);
