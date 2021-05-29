@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified','isAdmin'])->group(function () {
     Route::get('users', [AdminController::class, 'viewUsers']);
     Route::get('gas', [AdminController::class, 'viewGas']);
     Route::get('companies', [AdminController::class, 'viewCompanies']);
+    Route::get('payments', [AdminController::class, 'payments']);
     Route::post('addCompany', [AdminController::class, 'addCompany']);
     Route::post('change_password', [AdminController::class, 'changePassword']);
     Route::post('editCompany', [AdminController::class, 'editCompany']);

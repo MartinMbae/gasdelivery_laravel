@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Gas;
 use App\Models\GasCompany;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserOrder;
@@ -286,5 +287,10 @@ class AdminController extends Controller
         $user->password = Hash::make($request->new);
         $user->save();
         return Redirect::back()->with('success', 'Password has been updated');
+    }
+
+    public function payments(){
+        $payments = Payment::where('callback_response_code','0')->orderBy('created_at','desc')->paginate(10);
+        return view('payments', compact('payments'));
     }
 }

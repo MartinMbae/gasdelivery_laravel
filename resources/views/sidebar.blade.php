@@ -39,6 +39,12 @@
                     <p>Registered Users</p>
                 </a>
             </li>
+            <li class="nav-item ">
+                <a class="nav-link" href="{{ url('payments') }}">
+                    <i class="material-icons">money</i>
+                    <p>Payments</p>
+                </a>
+            </li>
         </ul>
     </div>
 </div>
