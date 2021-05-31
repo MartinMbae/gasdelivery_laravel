@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\api\MpesaController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -16,8 +17,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/create_storage', function () {
+    Artisan::call('storage:link');
+    return "Symlink was set successfully";
+});
 
-Route::middleware(['auth', 'verified','isAdmin'])->group(function () {
+Route::middleware(['auth', 'verified', 'isAdmin'])->group(function () {
     Route::get('/', [AdminController::class, 'index']);
     Route::get('orders/{tag?}', [AdminController::class, 'viewOrders']);
     Route::get('users', [AdminController::class, 'viewUsers']);

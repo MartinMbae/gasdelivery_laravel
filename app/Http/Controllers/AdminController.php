@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class AdminController extends Controller
@@ -44,7 +45,6 @@ class AdminController extends Controller
             'Unavailable',
         );
     }
-
 
     public function fetchOrders($limit, $status = null)
     {
@@ -112,6 +112,14 @@ class AdminController extends Controller
     public function viewCompanies()
     {
         $companies = GasCompany::orderBy('name', 'asc')->get();
+
+        foreach ($companies as $company){
+            if ($company->image == null){
+                $company->url = "https://cdn.iconscout.com/icon/free/png-512/data-not-found-1965034-1662569.png";
+            }else{
+                $company->url = url('public/storage_images/'.$company->image);
+            }
+        }
         return view('companies', compact('companies'));
     }
 
@@ -164,14 +172,16 @@ class AdminController extends Controller
 
     public function addCompany(Request $request)
     {
-
         Validator::make($request->all(), [
             'name' => ['required', 'min:3', 'max:20', 'unique:gas_companies'],
         ], [
             'name.unique' => 'Another company with a similar name already exist.'
         ])->validateWithBag('gas');
-
         $company = new GasCompany();
+        if ($request->file('image') != null) {
+            $path = $request->file('image')->store('company_images', ['disk' => 'public']);
+            $company->image = $path;
+        }
         $company->name = $request->name;
         $company->save();
         return Redirect::back()->with('success', 'Company has been added successfully');
@@ -188,6 +198,7 @@ class AdminController extends Controller
             return Redirect::back()->with('success', 'Order has been marked as complete');
         }
     }
+
     public function cancelOrder(Request $request)
     {
         $order = UserOrder::find($request->order_id);
@@ -199,6 +210,7 @@ class AdminController extends Controller
             return Redirect::back()->with('success', 'Order has been marked as cancelled');
         }
     }
+
     public function addGas(Request $request)
     {
         Validator::make($request->all(), [
@@ -233,6 +245,11 @@ class AdminController extends Controller
         ], [
             'name.unique' => 'Another company with a similar name already exist.'
         ])->validateWithBag('gas_edit');
+
+        if ($request->file('image') != null) {
+            $path = $request->file('image')->store('company_images', ['disk' => 'public']);
+            $company->image = $path;
+        }
 
         $company->name = $request->name;
         $company->save();

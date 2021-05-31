@@ -17,6 +17,7 @@ class CreateGasCompaniesTable extends Migration
         Schema::create('gas_companies', function (Blueprint $table) {
             $table->id();
             $table->string('name', 20)->unique();
+            $table->string('image')->nullable();
             $table->timestamps();
         });
 

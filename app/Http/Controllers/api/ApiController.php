@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -32,7 +33,13 @@ class ApiController extends Controller
         }
 
         foreach ($gasses as $gas) {
-            $gas->company_name = GasCompany::find($gas->company_id)->name;
+            $gasCompany = GasCompany::find($gas->company_id);
+            $gas->company_name = $gasCompany->name;
+            if ($gasCompany->image == null) {
+                $gas->url = null;
+            } else {
+                $gas->url = url('public/storage_images/'.$gasCompany->image);
+            }
         }
 
         return response()->json(
@@ -159,7 +166,6 @@ class ApiController extends Controller
         }
     }
 
-
     public function fetchMyAddresses($userId)
     {
         $user = User::find($userId);
@@ -234,7 +240,6 @@ class ApiController extends Controller
         }
     }
 
-
     public function fetchAllPayments($userId)
     {
         $user = User::find($userId);
@@ -245,11 +250,11 @@ class ApiController extends Controller
                     'message' => "Your request was not verified",
                 ], $this->successStatus);
         } else {
-            $payments = Payment::where('callback_response_code','0')->orderBy('created_at','desc')->limit(30)->get();
+            $payments = Payment::where('callback_response_code', '0')->orderBy('created_at', 'desc')->limit(30)->get();
 
-          foreach ($payments as $payment){
-              $payment->created_at_parsed = $payment->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
-          }
+            foreach ($payments as $payment) {
+                $payment->created_at_parsed = $payment->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
+            }
             return response()->json(
                 [
                     'success' => true,
@@ -268,7 +273,7 @@ class ApiController extends Controller
                     'message' => "Your request was not verified",
                 ], $this->successStatus);
         } else {
-            $myOrders = UserOrder::where('user_id', $userId)->where('status', '0')->orWhere('status','4')->get();
+            $myOrders = UserOrder::where('user_id', $userId)->where('status', '0')->orWhere('status', '4')->get();
 
             foreach ($myOrders as $myOrder) {
                 $address = UserAddress::find($myOrder->address_id);

@@ -1,6 +1,8 @@
 @extends('layout')
 
 @section('content')
+
+
     <div class="content">
         <div class="container-fluid">
             <div class="row">
@@ -27,6 +29,10 @@
                                         </th>
 
                                         <th>
+                                            Cylinder
+                                        </th>
+
+                                        <th>
                                             Action
                                         </th>
                                     </tr>
@@ -39,6 +45,10 @@
                                             </td>
                                             <td>
                                                 {{ $company->name }}
+                                            </td>
+                                            <td>
+                                                <img src="{{ $company->url }}" height="100" width="100">
+
                                             </td>
                                             <td>
                                                 <i class="material-icons"  data-toggle="modal" data-target="#editCompanyModal{{ $company->id }}">edit</i>
@@ -55,7 +65,7 @@
                                                             <span aria-hidden="true">&times;</span>
                                                         </button>
                                                     </div>
-                                                    <form action="{{ url('editCompany') }}" method="POST">
+                                                    <form action="{{ url('editCompany') }}" method="POST" enctype="multipart/form-data">
                                                         @csrf
                                                         <div class="modal-body">
                                                             <div class="form-group">
@@ -64,6 +74,15 @@
                                                                 <input type="hidden" name="id"  value="{{ $company->id }}">
                                                                 {!! $errors->gas_edit->first('name', '<p class="text-danger">:message</p>') !!}
                                                             </div>
+
+                                                            <div class="form-group">
+                                                                <label><strong>Change Image</strong></label>
+                                                                <div>
+                                                                    <input type="file"  name="image" class="custom-file-input">
+                                                                    <label class="custom-file-label" for="customFile">Choose file</label>
+                                                                </div>
+                                                            </div>
+
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -95,14 +114,23 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="{{ url('addCompany') }}" method="POST">
+                <form action="{{ url('addCompany') }}" method="POST"  enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
                         <div class="form-group">
                             <label for="company_name" class="col-form-label">Company Name</label>
-                            <input type="text" class="form-control" name="name" id="company_name" value="{{ old('name') }}">
+                            <input type="text" class="form-control" name="name" id="company_name" value="{{ old('name') }}" required>
                             {!! $errors->gas->first('name', '<p class="text-danger">:message</p>') !!}
                         </div>
+
+                        <div class="form-group">
+                            <label><strong>Upload Files</strong></label>
+                            <div class="custom-file">
+                                <input type="file"  name="image" class="custom-file-input" id="customFile">
+                                <label class="custom-file-label" for="customFile">Choose file</label>
+                            </div>
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
