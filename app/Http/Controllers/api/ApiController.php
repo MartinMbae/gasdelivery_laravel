@@ -10,6 +10,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserOrder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -119,10 +120,8 @@ class ApiController extends Controller
     public function postOrder(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'total_price' => ['bail', 'required',],
-            'count' => ['bail', 'required', 'numeric', 'max:10'],
+            'cartItems' => ['bail', 'required',],
             'address_id' => ['bail', 'required'],
-            'gas_id' => ['bail', 'required'],
             'user_id' => ['bail', 'required'],
             'order_instructions' => ['bail', 'nullable', 'max:200'],
         ],
@@ -130,6 +129,7 @@ class ApiController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 401);
         }
+
         $user = User::find($request->user_id);
         if ($user == null) {
             return response()->json(
@@ -138,21 +138,30 @@ class ApiController extends Controller
                     'message' => "Your request was not verified",
                 ], $this->successStatus);
         } else {
-            $order = new UserOrder();
-            $order->user_id = $request->user_id;
-            $order->address_id = $request->address_id;
-            $order->gas_id = $request->gas_id;
-            $order->count = $request->count;
-            $order->total_price = $request->total_price;
-            $order->order_instructions = $request->order_instructions;
-            try {
-                $order->save();
 
+            $str = preg_replace('/\\\\\"/',"\"", $request->cartItems);
+            $cartItems = json_decode($str);
+
+            $newOrderIds = [];
+            foreach ($cartItems as $cartItem){
+                $order = new UserOrder();
+                $order->user_id = $request->user_id;
+                $order->address_id = $request->address_id;
+                $order->gas_id = $cartItem->id;
+//                $order->count = $cartItem->count;
+                $order->count = 1;
+                $order->total_price = 1 * $cartItem->price;  // (int) $cartItem->count * $cartItem->price;
+                $order->order_instructions = $request->order_instructions;
+
+                $order->save();
                 $order->refresh();
+                $newOrderIds[] = $order->id;
+            }
+            try {
                 return response()->json(
                     [
                         'success' => true,
-                        'order_id' => $order->id,
+                        'order_id' => $newOrderIds,
                         'message' => "Order has been placed successfully",
                     ], $this->successStatus);
             } catch (\Exception $exception) {

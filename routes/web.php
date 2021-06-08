@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\api\MpesaController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->group(function () {
     Route::get('orders/{tag?}', [AdminController::class, 'viewOrders']);
     Route::get('users', [AdminController::class, 'viewUsers']);
     Route::get('gas', [AdminController::class, 'viewGas']);
+    Route::get('test', [HomeController::class, 'test']);
     Route::get('companies', [AdminController::class, 'viewCompanies']);
     Route::get('payments', [AdminController::class, 'payments']);
     Route::post('addCompany', [AdminController::class, 'addCompany']);
@@ -39,5 +41,5 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->group(function () {
 });
 Auth::routes(['verify' => true]);
 
-Route::get('test', [MpesaController::class, 'test']);
+//Route::get('test', [MpesaController::class, 'test']);
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
