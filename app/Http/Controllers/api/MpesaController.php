@@ -16,7 +16,7 @@ class MpesaController extends Controller
 {
     private function callBackBaseUrl()
     {
-        return 'https://asapenergies.co.ke';
+        return 'https://app.asapenergies.co.ke';
     }
 
     public function generateAccessToken()
@@ -76,7 +76,7 @@ class MpesaController extends Controller
             'PhoneNumber' => $senderPhoneNumber, // replace this with your phone number
             'CallBackURL' => $this->callBackBaseUrl() . "/api/confirmation/$identifier",
             'AccountReference' => "ASAP",
-            'TransactionDesc' => "Testing stk push on sandbox"
+            'TransactionDesc' => "ASAP Payments"
         ];
         $data_string = json_encode($curl_post_data);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -161,12 +161,12 @@ class MpesaController extends Controller
         $payment->stk_status = $stk_status;
         try {
             $payment->save();
-
-            $userOrder = UserOrder::find($payment->order_id);
-            $userOrder->status = '4';
-            $userOrder->save();
-
-
+            $ordersGiven = json_decode($payment->order_id);
+            foreach ($ordersGiven as $orderGiven){
+                $userOrder = UserOrder::find($orderGiven);
+                $userOrder->status = '4';
+                $userOrder->save();
+            }
         } catch (\Exception $exception) {
             $dbError = new DbError();
             $dbError->stage = "STK CallBAck Decoding";

@@ -148,9 +148,8 @@ class ApiController extends Controller
                 $order->user_id = $request->user_id;
                 $order->address_id = $request->address_id;
                 $order->gas_id = $cartItem->id;
-//                $order->count = $cartItem->count;
-                $order->count = 1;
-                $order->total_price = 1 * $cartItem->price;  // (int) $cartItem->count * $cartItem->price;
+                $order->count = $cartItem->count;
+                $order->total_price = (int) $cartItem->count * $cartItem->price;
                 $order->order_instructions = $request->order_instructions;
 
                 $order->save();
@@ -442,14 +441,23 @@ class ApiController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 401);
         }
-        $random = Str::random(20) . '_' . $request->order_id;
+
+        $ordersGiven = json_decode($request->order_id);
+        $cumulativeTotalPrice = 0;
+        foreach ($ordersGiven as $orderGiven){
+            $userOrder = UserOrder::find($orderGiven);
+            $price = $userOrder->total_price;
+            $count = $userOrder->count;
+            $totalPrice = (int) $price * (int) $count;
+            $cumulativeTotalPrice += $totalPrice;
+        }
+        $random = Str::random(10). time();
         $payment = new Payment();
         $payment->identifier = $random;
         $payment->user_id = $request->user_id;
         $payment->user_phone = $request->phone;
         $payment->order_id = $request->order_id;
-        $userOrder = UserOrder::find($payment->order_id);
-        $payment->amount = $userOrder->total_price;
+        $payment->amount = $cumulativeTotalPrice;
         $payment->save();
 
         $mpesaController = new MpesaController();
