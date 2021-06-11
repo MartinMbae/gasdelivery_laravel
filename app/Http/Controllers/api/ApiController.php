@@ -10,13 +10,11 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserOrder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -54,14 +52,14 @@ class ApiController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'email' => ['bail', 'required', 'email',],
+            'phone' => ['bail', 'required', 'numeric', 'digits:10',],
             'password' => ['bail', 'required']
         ],
         );
         if ($validator->fails()) {
             return response()->json($validator->errors(), 401);
         }
-        $credentials = $request->only('email', 'password');
+        $credentials = $request->only('phone', 'password');
         if (Auth::attempt($credentials)) {
             return response()->json(
                 [
@@ -73,7 +71,7 @@ class ApiController extends Controller
             return response()->json(
                 [
                     'success' => false,
-                    'message' => "Invalid Email address or Password",
+                    'message' => "Invalid Phone Number or Password",
                 ], $this->successStatus);
         }
     }
