@@ -70,7 +70,7 @@ class MpesaController extends Controller
             'Password' => $this->lipaNaMpesaPassword(),
             'Timestamp' => Carbon::rawParse('now')->format('YmdHms'),
             'TransactionType' => 'CustomerBuyGoodsOnline',
-            'Amount' => '1',
+            'Amount' => $amountToCharge,
             'PartyA' => $senderPhoneNumber, // replace this with your phone number
             'PartyB' => '5096743',
             'PhoneNumber' => $senderPhoneNumber, // replace this with your phone number

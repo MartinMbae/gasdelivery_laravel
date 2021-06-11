@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -39,7 +40,7 @@ class ApiController extends Controller
             if ($gasCompany->image == null) {
                 $gas->url = null;
             } else {
-                $gas->url = url('public/storage_images/'.$gasCompany->image);
+                $gas->url = url('public/storage_images/' . $gasCompany->image);
             }
         }
 
@@ -73,6 +74,42 @@ class ApiController extends Controller
                 [
                     'success' => false,
                     'message' => "Invalid Email address or Password",
+                ], $this->successStatus);
+        }
+    }
+
+
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['bail', 'required', 'email',],
+        ],
+        );
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 401);
+        }
+        $user = User::where('email', $request->email)->first();
+
+        if ($user == null) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => "No user is registered with the the provided email",
+                ], $this->successStatus);
+        } else {
+            $status = Password::sendResetLink(
+                $request->only('email')
+            );
+
+            if ($status === Password::RESET_LINK_SENT) {
+                $message = "An email with password reset instruction has been sent to $request->email";
+            } else {
+                $message = "Something went wrong. Reset email not sent";
+            }
+            return response()->json(
+                [
+                    'success' => true,
+                    'message' => $message,
                 ], $this->successStatus);
         }
     }
@@ -139,17 +176,17 @@ class ApiController extends Controller
                 ], $this->successStatus);
         } else {
 
-            $str = preg_replace('/\\\\\"/',"\"", $request->cartItems);
+            $str = preg_replace('/\\\\\"/', "\"", $request->cartItems);
             $cartItems = json_decode($str);
 
             $newOrderIds = [];
-            foreach ($cartItems as $cartItem){
+            foreach ($cartItems as $cartItem) {
                 $order = new UserOrder();
                 $order->user_id = $request->user_id;
                 $order->address_id = $request->address_id;
                 $order->gas_id = $cartItem->id;
                 $order->count = $cartItem->count;
-                $order->total_price = (int) $cartItem->count * $cartItem->price;
+                $order->total_price = (int)$cartItem->count * $cartItem->price;
                 $order->order_instructions = $request->order_instructions;
 
                 $order->save();
@@ -281,7 +318,9 @@ class ApiController extends Controller
                     'message' => "Your request was not verified",
                 ], $this->successStatus);
         } else {
-            $myOrders = UserOrder::where('user_id', $userId)->where('status', '0')->orWhere('status', '4')->get();
+            $myOrders = UserOrder::where('user_id', $userId)->where(function ($query) {
+                $query->where('status', '0')->orWhere('status', '4');
+            })->orderBy('id', 'desc')->get();
 
             foreach ($myOrders as $myOrder) {
                 $address = UserAddress::find($myOrder->address_id);
@@ -444,14 +483,14 @@ class ApiController extends Controller
 
         $ordersGiven = json_decode($request->order_id);
         $cumulativeTotalPrice = 0;
-        foreach ($ordersGiven as $orderGiven){
+        foreach ($ordersGiven as $orderGiven) {
             $userOrder = UserOrder::find($orderGiven);
             $price = $userOrder->total_price;
             $count = $userOrder->count;
-            $totalPrice = (int) $price * (int) $count;
+            $totalPrice = (int)$price * (int)$count;
             $cumulativeTotalPrice += $totalPrice;
         }
-        $random = Str::random(10). time();
+        $random = Str::random(10) . time();
         $payment = new Payment();
         $payment->identifier = $random;
         $payment->user_id = $request->user_id;

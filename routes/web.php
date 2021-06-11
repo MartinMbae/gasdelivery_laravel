@@ -23,7 +23,7 @@ Route::get('/create_storage', function () {
     return "Symlink was set successfully";
 });
 
-Route::middleware(['auth', 'verified', 'isAdmin'])->group(function () {
+Route::middleware(['auth', 'isAdmin', 'verified'])->group(function () {
     Route::get('/', [AdminController::class, 'index']);
     Route::get('orders/{tag?}', [AdminController::class, 'viewOrders']);
     Route::get('users', [AdminController::class, 'viewUsers']);

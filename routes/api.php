@@ -21,6 +21,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::post('register', [ApiController::class, 'register']);
 Route::post('login', [ApiController::class, 'login']);
+Route::post('forgot_password', [ApiController::class, 'forgotPassword']);
 Route::get('gas/{refill?}', [ApiController::class, 'gas']);
 Route::post('add_address', [ApiController::class, 'addAddress']);
 Route::get('get_addresses/{user_id}', [ApiController::class, 'fetchMyAddresses']);
