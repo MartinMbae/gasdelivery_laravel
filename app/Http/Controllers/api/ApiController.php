@@ -483,10 +483,9 @@ class ApiController extends Controller
         $cumulativeTotalPrice = 0;
         foreach ($ordersGiven as $orderGiven) {
             $userOrder = UserOrder::find($orderGiven);
+
             $price = $userOrder->total_price;
-            $count = $userOrder->count;
-            $totalPrice = (int)$price * (int)$count;
-            $cumulativeTotalPrice += $totalPrice;
+            $cumulativeTotalPrice += $price;
         }
         $random = Str::random(10) . time();
         $payment = new Payment();
@@ -498,7 +497,7 @@ class ApiController extends Controller
         $payment->save();
 
         $mpesaController = new MpesaController();
-        $response = $mpesaController->customerMpesaSTKPush($random, $request->phone, '2');
+        $response = $mpesaController->customerMpesaSTKPush($random, $request->phone, $cumulativeTotalPrice);
 
         $decodedResponse = json_decode($response);
         $successFull = false;
