@@ -4,6 +4,7 @@ namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Gas;
+use App\Models\GasAccessory;
 use App\Models\GasCompany;
 use App\Models\Order;
 use App\Models\Payment;
@@ -541,6 +542,26 @@ class ApiController extends Controller
                 'message' => "Something went wrong. Try again later. Error message: \"$errorMessage\""
             ], $this->successStatus);
         }
+
+
+    }
+
+
+    public function getAccessories()
+    {
+        $accessories = GasAccessory::get();
+        foreach ($accessories as $accessory) {
+            if ($accessory->image == null) {
+                $accessory->url = null;
+            } else {
+                $accessory->url = asset("storage/" . $accessory->image);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'accessories' => $accessories
+        ], $this->successStatus);
 
 
     }

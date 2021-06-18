@@ -24,6 +24,7 @@ Route::post('login', [ApiController::class, 'login']);
 Route::post('forgot_password', [ApiController::class, 'forgotPassword']);
 Route::get('gas/{refill?}', [ApiController::class, 'gas']);
 Route::post('add_address', [ApiController::class, 'addAddress']);
+Route::get('accessories', [ApiController::class, 'getAccessories']);
 Route::get('get_addresses/{user_id}', [ApiController::class, 'fetchMyAddresses']);
 Route::get('get_orders/{user_id}', [ApiController::class, 'fetchMyOngoingOrders']);
 Route::get('get_all_orders/{user_id}', [ApiController::class, 'fetchAllOrders']);
