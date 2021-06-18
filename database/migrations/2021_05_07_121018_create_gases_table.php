@@ -22,6 +22,7 @@ class CreateGasesTable extends Migration
             $table->string('price');
             $table->string('availability',20);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

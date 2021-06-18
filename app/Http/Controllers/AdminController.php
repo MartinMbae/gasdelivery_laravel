@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Gas;
+use App\Models\GasAccessory;
 use App\Models\GasCompany;
 use App\Models\Order;
 use App\Models\Payment;
@@ -117,7 +118,7 @@ class AdminController extends Controller
             if ($company->image == null){
                 $company->url = "https://cdn.iconscout.com/icon/free/png-512/data-not-found-1965034-1662569.png";
             }else{
-                $company->url = url('public/storage_images/'.$company->image);
+                $company->url = asset("storage/".$company->image);
             }
         }
         return view('companies', compact('companies'));
@@ -169,6 +170,20 @@ class AdminController extends Controller
         return view('gas', compact('companies', 'classifications', 'gasses', 'availability'));
     }
 
+    public function viewAccessories()
+    {
+        $availability = $this->gasAvailability();
+        $accessories = GasAccessory::paginate(10);
+        foreach ($accessories as $accessory){
+            if ($accessory->image == null){
+                $accessory->url = "https://cdn.iconscout.com/icon/free/png-512/data-not-found-1965034-1662569.png";
+            }else{
+                $accessory->url = asset("storage/".$accessory->image);
+            }
+        }
+
+        return view('accessories', compact('accessories', 'availability'));
+    }
 
     public function addCompany(Request $request)
     {
@@ -185,6 +200,22 @@ class AdminController extends Controller
         $company->name = $request->name;
         $company->save();
         return Redirect::back()->with('success', 'Company has been added successfully');
+    }
+
+    public function addAccessory(Request $request)
+    {
+
+        $gasAccessory = new GasAccessory();
+        if ($request->file('image') != null) {
+            $path = $request->file('image')->store('accessory_images', ['disk' => 'public']);
+            $gasAccessory->image = $path;
+        }
+        $gasAccessory->title = $request->title;
+        $gasAccessory->description = $request->description;
+        $gasAccessory->initialPrice = $request->initialPrice;
+        $gasAccessory->price = $request->price;
+        $gasAccessory->save();
+        return Redirect::back()->with('success', 'Gas Accessory has been added successfully');
     }
 
     public function completeOrder(Request $request)
@@ -254,6 +285,41 @@ class AdminController extends Controller
         $company->name = $request->name;
         $company->save();
         return Redirect::back()->with('success', 'Company has been updated successfully');
+    }
+
+    public function editAccessory(Request $request)
+    {
+
+        $gasAccessory = GasAccessory::find($request->id);
+        if ($gasAccessory == null) {
+            return Redirect::back()->with('error', 'Something went wrong. Try again');
+        }
+        if ($request->file('image') != null) {
+            $path = $request->file('image')->store('company_images', ['disk' => 'public']);
+            $gasAccessory->image = $path;
+        }
+
+        $gasAccessory->title = $request->title;
+        $gasAccessory->description = $request->description;
+        $gasAccessory->initialPrice = $request->initialPrice;
+        $gasAccessory->price = $request->price;
+        $gasAccessory->save();
+
+        return Redirect::back()->with('success', 'Accessory has been updated successfully');
+    }
+
+    public function deleteAccessory(Request $request)
+    {
+        $gasAccessory = GasAccessory::find($request->id);
+        $gasAccessory->delete();
+        return Redirect::back()->with('success', 'Accessory has been deleted successfully');
+    }
+
+    public function deleteGas(Request $request)
+    {
+        $gas = Gas::find($request->id);
+        $gas->delete();
+        return Redirect::back()->with('success', 'Gas has been deleted successfully');
     }
 
     public function editGas(Request $request)

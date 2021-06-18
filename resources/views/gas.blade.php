@@ -73,8 +73,47 @@
                                             </td>
                                             <td>
                                                 <i class="material-icons"  data-toggle="modal" data-target="#editGasModal{{$gas->id}}">edit</i>
+                                                <i class="material-icons" data-toggle="modal"
+                                                   data-target="#deleteGasModal{{ $gas->id }}">delete</i>
+
                                             </td>
                                         </tr>
+
+                                        <div class="modal fade" id="deleteGasModal{{ $gas->id }}"
+                                             tabindex="-1"
+                                             role="dialog" aria-labelledby="exampleModalLabel"
+                                             aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="exampleModalLabel">Delete Gas</h5>
+                                                        <button type="button" class="close" data-dismiss="modal"
+                                                                aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <form action="{{ url('deleteGas') }}" method="POST"
+                                                          enctype="multipart/form-data">
+                                                        @csrf
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you would like to delete this item</p>
+
+                                                            <input type="hidden" class="form-control" name="id"
+                                                                   value="{{ $gas->id }}" required>
+
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">Cancel
+                                                            </button>
+                                                            <button type="submit" class="btn btn-danger">Delete</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
                                         <div class="modal fade" id="editGasModal{{$gas->id}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
                                              aria-hidden="true">
                                             <div class="modal-dialog" role="document">

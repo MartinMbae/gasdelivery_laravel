@@ -48,7 +48,6 @@
                                             </td>
                                             <td>
                                                 <img src="{{ $company->url }}" height="100" width="100">
-
                                             </td>
                                             <td>
                                                 <i class="material-icons"  data-toggle="modal" data-target="#editCompanyModal{{ $company->id }}">edit</i>

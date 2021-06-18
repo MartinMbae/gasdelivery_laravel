@@ -16,7 +16,7 @@ class MpesaController extends Controller
 {
     private function callBackBaseUrl()
     {
-        return 'https://app.asapenergies.co.ke';
+        return 'https://admin.asapenergies.co.ke';
     }
 
     public function generateAccessToken()

@@ -16,6 +16,12 @@
                 </a>
             </li>
             <li class="nav-item ">
+                <a class="nav-link" href="{{ url('accessories') }}">
+                    <i class="material-icons">list</i>
+                    <p>Accessories</p>
+                </a>
+            </li>
+            <li class="nav-item ">
                 <a class="nav-link" href="{{ url('gas') }}">
                     <i class="material-icons">list</i>
                     <p>Gas Cookers</p>

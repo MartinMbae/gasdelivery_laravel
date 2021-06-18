@@ -28,10 +28,15 @@ Route::middleware(['auth', 'isAdmin', 'verified'])->group(function () {
     Route::get('orders/{tag?}', [AdminController::class, 'viewOrders']);
     Route::get('users', [AdminController::class, 'viewUsers']);
     Route::get('gas', [AdminController::class, 'viewGas']);
+    Route::get('accessories', [AdminController::class, 'viewAccessories']);
     Route::get('test', [HomeController::class, 'test']);
     Route::get('companies', [AdminController::class, 'viewCompanies']);
     Route::get('payments', [AdminController::class, 'payments']);
     Route::post('addCompany', [AdminController::class, 'addCompany']);
+    Route::post('addAccessory', [AdminController::class, 'addAccessory']);
+    Route::post('editAccessory', [AdminController::class, 'editAccessory']);
+    Route::post('deleteAccessory', [AdminController::class, 'deleteAccessory']);
+    Route::post('deleteGas', [AdminController::class, 'deleteGas']);
     Route::post('change_password', [AdminController::class, 'changePassword']);
     Route::post('editCompany', [AdminController::class, 'editCompany']);
     Route::post('addGas', [AdminController::class, 'addGas']);
