@@ -17,7 +17,7 @@ class CreatePaymentsTable extends Migration
             $table->id();
             $table->string('identifier',30)->unique();
             $table->unsignedBigInteger('user_id');
-            $table->string('order_id');
+            $table->unsignedBigInteger('cumulative_id');
             $table->string('user_phone', 20);
             $table->string('amount', 10);
             $table->string('stk_response_code', 20)->nullable();
@@ -39,6 +39,7 @@ class CreatePaymentsTable extends Migration
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('cumulative_id')->references('id')->on('cumulative_orders');
         });
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CumulativeOrder;
 use App\Models\Gas;
 use App\Models\GasAccessory;
 use App\Models\GasCompany;
@@ -11,6 +12,8 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserOrder;
+use App\Models\UserOrderAccessory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -156,7 +159,8 @@ class ApiController extends Controller
     public function postOrder(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'cartItems' => ['bail', 'required',],
+            'gasItems' => ['bail', 'required',],
+            'accessoryItems' => ['bail', 'required',],
             'address_id' => ['bail', 'required'],
             'user_id' => ['bail', 'required'],
             'order_instructions' => ['bail', 'nullable', 'max:200'],
@@ -175,28 +179,56 @@ class ApiController extends Controller
                 ], $this->successStatus);
         } else {
 
-            $str = preg_replace('/\\\\\"/', "\"", $request->cartItems);
-            $cartItems = json_decode($str);
+            $gasItemsString = preg_replace('/\\\\\"/', "\"", $request->gasItems);
+            $accessoryItemsString = preg_replace('/\\\\\"/', "\"", $request->accessoryItems);
 
-            $newOrderIds = [];
-            foreach ($cartItems as $cartItem) {
+            $accessoryItems = json_decode($accessoryItemsString);
+            $gasItems = json_decode($gasItemsString);
+
+            $newOrderIdsGasItems = [];
+            $newOrderIdsAccessoryItems = [];
+
+
+            foreach ($accessoryItems as $accessoryItem) {
+                $orderAccessory = new UserOrderAccessory();
+                $orderAccessory->user_id = $request->user_id;
+                $orderAccessory->accessory_id = $accessoryItem->id;
+                $orderAccessory->count = $accessoryItem->count;
+                $orderAccessory->total_price = (int)$accessoryItem->count * $accessoryItem->price;
+
+                $orderAccessory->save();
+                $orderAccessory->refresh();
+                $newOrderIdsAccessoryItems[] = $orderAccessory->id;
+            }
+
+            foreach ($gasItems as $gasItem) {
                 $order = new UserOrder();
                 $order->user_id = $request->user_id;
-                $order->address_id = $request->address_id;
-                $order->gas_id = $cartItem->id;
-                $order->count = $cartItem->count;
-                $order->total_price = (int)$cartItem->count * $cartItem->price;
-                $order->order_instructions = $request->order_instructions;
+                $order->gas_id = $gasItem->id;
+                $order->count = $gasItem->count;
+                $order->total_price = (int)$gasItem->count * $gasItem->price;
 
                 $order->save();
                 $order->refresh();
-                $newOrderIds[] = $order->id;
+                $newOrderIdsGasItems[] = $order->id;
             }
+
+
+            $cumulativeOrder = new CumulativeOrder();
+            $cumulativeOrder->user_orders_gases = json_encode($newOrderIdsGasItems);
+            $cumulativeOrder->user_orders_accessory = json_encode($newOrderIdsAccessoryItems);
+            $cumulativeOrder->user_id = $request->user_id;
+            $cumulativeOrder->address_id = $request->address_id;
+            $cumulativeOrder->order_instructions = $request->order_instructions;
+            $cumulativeOrder->save();
+            $cumulativeOrder->refresh();
+
+
             try {
                 return response()->json(
                     [
                         'success' => true,
-                        'order_id' => $newOrderIds,
+                        'cumulative_id' => $cumulativeOrder->id,
                         'message' => "Order has been placed successfully",
                     ], $this->successStatus);
             } catch (\Exception $exception) {
@@ -473,27 +505,45 @@ class ApiController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'user_id' => ['bail', 'required'],
-            'order_id' => ['bail', 'required'],
+            'cumulative_id' => ['bail', 'required'],
             'phone' => ['bail', 'required', 'numeric', 'digits:10'],
         ]);
         if ($validator->fails()) {
             return response()->json($validator->errors(), 401);
         }
 
-        $ordersGiven = json_decode($request->order_id);
+        $cumulativeOrder = CumulativeOrder::find($request->cumulative_id);
+
+        if ($cumulativeOrder == null) {
+            return response()->json([
+                'success' => false,
+                'message' => "Request cannot be verified"
+            ], $this->successStatus);
+        }
+
+
         $cumulativeTotalPrice = 0;
+        $ordersGiven = json_decode($cumulativeOrder->user_orders_gases);
         foreach ($ordersGiven as $orderGiven) {
             $userOrder = UserOrder::find($orderGiven);
-
             $price = $userOrder->total_price;
             $cumulativeTotalPrice += $price;
         }
+
+        $ordersAccessoryGiven = json_decode($cumulativeOrder->user_orders_accessory);
+        foreach ($ordersAccessoryGiven as $orderAccessoryGiven) {
+            $userOrderAccessory = UserOrderAccessory::find($orderAccessoryGiven);
+            $price = $userOrderAccessory->total_price;
+            $cumulativeTotalPrice += $price;
+        }
+
+
         $random = Str::random(10) . time();
         $payment = new Payment();
         $payment->identifier = $random;
         $payment->user_id = $request->user_id;
         $payment->user_phone = $request->phone;
-        $payment->order_id = $request->order_id;
+        $payment->cumulative_id = $request->cumulative_id;
         $payment->amount = $cumulativeTotalPrice;
         $payment->save();
 
@@ -557,12 +607,9 @@ class ApiController extends Controller
                 $accessory->url = asset("storage/" . $accessory->image);
             }
         }
-
         return response()->json([
             'success' => true,
             'accessories' => $accessories
         ], $this->successStatus);
-
-
     }
 }

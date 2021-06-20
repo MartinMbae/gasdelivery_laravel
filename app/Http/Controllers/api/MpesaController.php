@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CumulativeOrder;
 use App\Models\DbError;
 use App\Models\Payment;
 use App\Models\PaymentResponse;
@@ -161,12 +162,9 @@ class MpesaController extends Controller
         $payment->stk_status = $stk_status;
         try {
             $payment->save();
-            $ordersGiven = json_decode($payment->order_id);
-            foreach ($ordersGiven as $orderGiven){
-                $userOrder = UserOrder::find($orderGiven);
-                $userOrder->status = '4';
-                $userOrder->save();
-            }
+            $cumulativeOrder = CumulativeOrder::find($payment->cumulative_id);
+            $cumulativeOrder->status = '4';
+            $cumulativeOrder->save();
         } catch (\Exception $exception) {
             $dbError = new DbError();
             $dbError->stage = "STK CallBAck Decoding";
