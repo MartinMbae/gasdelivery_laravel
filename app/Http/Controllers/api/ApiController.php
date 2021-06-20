@@ -270,23 +270,21 @@ class ApiController extends Controller
                     'message' => "Your request was not verified",
                 ], $this->successStatus);
         } else {
-            $myOrders = UserOrder::where('user_id', $userId)->get();
 
-            foreach ($myOrders as $myOrder) {
-                $address = UserAddress::find($myOrder->address_id);
-                $gas = Gas::find($myOrder->gas_id);
-                $myOrder->address = $address->address;
-                $myOrder->house_number = $address->house_number;
-                $myOrder->apartment_estate = $address->apartment_estate;
-                $myOrder->landmark = $address->landmark;
-                $myOrder->classification = $gas->classification;
-                $myOrder->weight = $gas->weight;
-                $myOrder->initialPrice = $gas->initialPrice;
-                $myOrder->price = $gas->price;
-                $myOrder->company_name = GasCompany::find($gas->company_id)->name;
-                $myOrder->created_at_parsed = $myOrder->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
+            $myCumulativeOrders = CumulativeOrder::where('user_id', $userId)->orderBy('id', 'desc')->get();
 
-                switch ($myOrder->status) {
+            foreach ($myCumulativeOrders as $cumulativeOrder) {
+
+                $address = UserAddress::find($cumulativeOrder->address_id);
+
+                $cumulativeOrder->address = $address->address;
+                $cumulativeOrder->house_number = $address->house_number;
+                $cumulativeOrder->apartment_estate = $address->apartment_estate;
+                $cumulativeOrder->landmark = $address->landmark;
+
+                $cumulativeOrder->created_at_parsed = $cumulativeOrder->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
+
+                switch ($cumulativeOrder->status) {
                     case '0':
                         $status = 'Ongoing';
                         break;
@@ -299,19 +297,39 @@ class ApiController extends Controller
                     case '3':
                         $status = 'Rejected';
                         break;
-
                     case '4':
                         $status = 'Paid';
                         break;
                     default:
                         $status = "Undefined";
                 }
-                $myOrder->status = $status;
+                $cumulativeOrder->status = $status;
+
+                $gasItems = json_decode($cumulativeOrder->user_orders_gases);
+                $gasItemsOrders = UserOrder::whereIn('id', $gasItems)->get();
+                foreach ($gasItemsOrders as $myOrder) {
+                    $gas = Gas::find($myOrder->gas_id);
+                    $myOrder->classification = $gas->classification;
+                    $myOrder->weight = $gas->weight;
+                    $myOrder->initialPrice = $gas->initialPrice;
+                    $myOrder->price = $gas->price;
+                    $myOrder->company_name = GasCompany::find($gas->company_id)->name;
+                }
+
+                $accessoryItems = json_decode($cumulativeOrder->user_orders_accessory);
+                $accessoryItemsOrders = UserOrderAccessory::whereIn('id', $accessoryItems)->get();
+                foreach ($accessoryItemsOrders as $accessoryOrder) {
+                    $accessory = GasAccessory::find($accessoryOrder->accessory_id);
+                    $accessoryOrder->accessory = $accessory;
+                }
+
+                $cumulativeOrder->gasItemsOrders = $gasItemsOrders;
+                $cumulativeOrder->accessoryItemsOrders = $accessoryItemsOrders;
             }
             return response()->json(
                 [
                     'success' => true,
-                    'orders' => $myOrders,
+                    'orders' => $cumulativeOrder,
                 ], $this->successStatus);
         }
     }
@@ -349,25 +367,24 @@ class ApiController extends Controller
                     'message' => "Your request was not verified",
                 ], $this->successStatus);
         } else {
-            $myOrders = UserOrder::where('user_id', $userId)->where(function ($query) {
+
+            $myCumulativeOrders = CumulativeOrder::where('user_id', $userId)->where(function ($query) {
                 $query->where('status', '0')->orWhere('status', '4');
             })->orderBy('id', 'desc')->get();
 
-            foreach ($myOrders as $myOrder) {
-                $address = UserAddress::find($myOrder->address_id);
-                $gas = Gas::find($myOrder->gas_id);
-                $myOrder->address = $address->address;
-                $myOrder->house_number = $address->house_number;
-                $myOrder->apartment_estate = $address->apartment_estate;
-                $myOrder->landmark = $address->landmark;
-                $myOrder->classification = $gas->classification;
-                $myOrder->weight = $gas->weight;
-                $myOrder->initialPrice = $gas->initialPrice;
-                $myOrder->price = $gas->price;
-                $myOrder->company_name = GasCompany::find($gas->company_id)->name;
-                $myOrder->created_at_parsed = $myOrder->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
 
-                switch ($myOrder->status) {
+            foreach ($myCumulativeOrders as $cumulativeOrder) {
+
+                $address = UserAddress::find($cumulativeOrder->address_id);
+
+                $cumulativeOrder->address = $address->address;
+                $cumulativeOrder->house_number = $address->house_number;
+                $cumulativeOrder->apartment_estate = $address->apartment_estate;
+                $cumulativeOrder->landmark = $address->landmark;
+
+                $cumulativeOrder->created_at_parsed = $cumulativeOrder->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
+
+                switch ($cumulativeOrder->status) {
                     case '0':
                         $status = 'Ongoing';
                         break;
@@ -380,19 +397,39 @@ class ApiController extends Controller
                     case '3':
                         $status = 'Rejected';
                         break;
-
                     case '4':
                         $status = 'Paid';
                         break;
                     default:
                         $status = "Undefined";
                 }
-                $myOrder->status = $status;
+                $cumulativeOrder->status = $status;
+
+                $gasItems = json_decode($cumulativeOrder->user_orders_gases);
+                $gasItemsOrders = UserOrder::whereIn('id', $gasItems)->get();
+                foreach ($gasItemsOrders as $myOrder) {
+                    $gas = Gas::find($myOrder->gas_id);
+                    $myOrder->classification = $gas->classification;
+                    $myOrder->weight = $gas->weight;
+                    $myOrder->initialPrice = $gas->initialPrice;
+                    $myOrder->price = $gas->price;
+                    $myOrder->company_name = GasCompany::find($gas->company_id)->name;
+                }
+
+                $accessoryItems = json_decode($cumulativeOrder->user_orders_accessory);
+                $accessoryItemsOrders = UserOrderAccessory::whereIn('id', $accessoryItems)->get();
+                foreach ($accessoryItemsOrders as $accessoryOrder) {
+                    $accessory = GasAccessory::find($accessoryOrder->accessory_id);
+                    $accessoryOrder->accessory = $accessory;
+                }
+
+                $cumulativeOrder->gasItemsOrders = $gasItemsOrders;
+                $cumulativeOrder->accessoryItemsOrders = $accessoryItemsOrders;
             }
             return response()->json(
                 [
                     'success' => true,
-                    'orders' => $myOrders,
+                    'orders' => $cumulativeOrder,
                 ], $this->successStatus);
         }
     }
@@ -596,13 +633,12 @@ class ApiController extends Controller
 
     }
 
-
     public function getAccessories()
     {
         $accessories = GasAccessory::get();
         foreach ($accessories as $accessory) {
             if ($accessory->image == null) {
-                $accessory->url = null;
+                $accessory->url = 'https://bitsofco.de/content/images/2018/12/broken-1.png';
             } else {
                 $accessory->url = asset("storage/" . $accessory->image);
             }
