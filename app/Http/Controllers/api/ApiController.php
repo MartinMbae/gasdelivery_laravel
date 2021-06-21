@@ -42,7 +42,7 @@ class ApiController extends Controller
             if ($gasCompany->image == null) {
                 $gas->url = null;
             } else {
-                $gas->url = url('public/storage_images/' . $gasCompany->image);
+                $gas->url = asset("storage/".$gasCompany->image);
             }
         }
 
