@@ -48,7 +48,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="stats">
-                                <a  href="{{ url('orders/ongoing') }}">View Ongoing Orders</a>
+                                <a href="{{ url('orders/ongoing') }}">View Ongoing Orders</a>
                             </div>
                         </div>
                     </div>
@@ -64,7 +64,7 @@
                         </div>
                         <div class="card-footer">
                             <div class="stats">
-                                <a  href="{{ url('orders/cancelled') }}">View Cancelled Orders</a>
+                                <a href="{{ url('orders/cancelled') }}">View Cancelled Orders</a>
                             </div>
                         </div>
                     </div>
@@ -88,12 +88,12 @@
                                 <tbody>
 
                                 @foreach($latestUsers as $key=>$latestUser)
-                                <tr>
-                                    <td>{{ $key + 1}}</td>
-                                    <td>{{ $latestUser->name }}</td>
-                                    <td>{{ $latestUser->phone }}</td>
-                                    <td>{{ $latestUser->email }}</td>
-                                </tr>
+                                    <tr>
+                                        <td>{{ $key + 1}}</td>
+                                        <td>{{ $latestUser->name }}</td>
+                                        <td>{{ $latestUser->phone }}</td>
+                                        <td>{{ $latestUser->email }}</td>
+                                    </tr>
                                 @endforeach
                                 </tbody>
                             </table>
@@ -111,20 +111,30 @@
                                 <thead class="text-warning">
                                 <th>#</th>
                                 <th>Name</th>
-                                <th>Weight</th>
-                                <th>Service</th>
-                                <th>Status</th>
+                                <th>Items</th>
                                 </thead>
                                 <tbody>
 
                                 @foreach($latestOrders as $key => $latestOrder)
-                                <tr>
-                                    <td>{{ $key+1 }}</td>
-                                    <td>{{ $latestOrder->user->name }}</td>
-                                    <td>{{ $latestOrder->weight }} Kg</td>
-                                    <td>{{ $latestOrder->classification }}</td>
-                                    <td>{{ $latestOrder->stage }}</td>
-                                </tr>
+                                    <tr>
+                                        <td>{{ $key+1 }}</td>
+                                        <td>{{ $latestOrder->user->name }}</td>
+
+                                        <td>
+                                            <ul>
+                                                @foreach($latestOrder->gasItemsOrders as $gasItemsOrder)
+                                                    <li>
+                                                        {{ "$gasItemsOrder->count $gasItemsOrder->company_name  Gas ($gasItemsOrder->classification) for Ksh. $gasItemsOrder->total_price" }}
+                                                    </li>
+                                                @endforeach
+                                                @foreach($latestOrder->accessoryItemsOrders as $accessoryItemsOrder)
+                                                    <li>
+                                                        {{ "$accessoryItemsOrder->count ".$accessoryItemsOrder->accessory->title . ' for Ksh.'. $accessoryItemsOrder->total_price }}
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                        </td>
+                                    </tr>
                                 @endforeach
                                 </tbody>
                             </table>

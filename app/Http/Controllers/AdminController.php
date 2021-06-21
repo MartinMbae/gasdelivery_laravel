@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CumulativeOrder;
 use App\Models\Gas;
 use App\Models\GasAccessory;
 use App\Models\GasCompany;
@@ -10,6 +11,7 @@ use App\Models\Payment;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserOrder;
+use App\Models\UserOrderAccessory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -50,48 +52,16 @@ class AdminController extends Controller
     public function fetchOrders($limit, $status = null)
     {
         if ($limit) {
-            $latestOrders = UserOrder::orderBy('created_at', 'desc')->paginate(5);
+            $latestOrders = CumulativeOrder::orderBy('created_at', 'desc')->paginate(5);
         } else {
             if ($status == null) {
-                $latestOrders = UserOrder::orderBy('created_at', 'desc')->paginate(10);
+                $latestOrders = CumulativeOrder::orderBy('created_at', 'desc')->paginate(10);
             } else {
-                $latestOrders = UserOrder::orderBy('created_at', 'desc')->where('status', $status)->paginate(10);
+                $latestOrders = CumulativeOrder::orderBy('created_at', 'desc')->where('status', $status)->paginate(10);
             }
         }
         foreach ($latestOrders as $latestOrder) {
-            $address = UserAddress::find($latestOrder->address_id);
-            $gas = Gas::find($latestOrder->gas_id);
-            $latestOrder->user = User::find($latestOrder->user_id);
-            $latestOrder->address = $address->address;
-            $latestOrder->house_number = $address->house_number;
-            $latestOrder->apartment_estate = $address->apartment_estate;
-            $latestOrder->landmark = $address->landmark;
-            $latestOrder->classification = $gas->classification;
-            $latestOrder->weight = $gas->weight;
-            $latestOrder->initialPrice = $gas->initialPrice;
-            $latestOrder->price = $gas->price;
-            $latestOrder->date = $latestOrder->created_at->timezone('Africa/Nairobi')->format('d/m/Y g:i a');
-            $latestOrder->company_name = GasCompany::find($gas->company_id)->name;
-            switch ($latestOrder->status) {
-                case '0':
-                    $stage = 'New';
-                    break;
-
-                case '1':
-                    $stage = 'Complete';
-                    break;
-
-                case '2':
-                    $stage = 'Cancelled';
-                    break;
-
-                case '4':
-                    $stage = 'Paid';
-                    break;
-                default:
-                    $stage = 'Undefined';
-            }
-            $latestOrder->stage = $stage;
+            $this->loopCumulativeOrder($latestOrder);
         }
 
         return $latestOrders;
@@ -99,17 +69,72 @@ class AdminController extends Controller
 
     public function index()
     {
-        $ongoingOrders = UserOrder::where('status', '0')->count();
-        $completeOrders = UserOrder::where('status', '1')->count();
-        $cancelledOrders = UserOrder::where('status', '2')->count();
+        $ongoingOrders = CumulativeOrder::where('status', '0')->count();
+        $completeOrders = CumulativeOrder::where('status', '1')->count();
+        $cancelledOrders = CumulativeOrder::where('status', '2')->count();
         $usersCount = User::where('level', '0')->count();
         $latestUsers = User::orderBy('created_at', 'desc')->limit(5)->get();
         $latestOrders = $this->fetchOrders(true);
 
+        foreach ($latestOrders as $latestOrder){
+            $latestOrder->user = User::find($latestOrder->user_id);
+        }
 
         return view('dashboard', compact('ongoingOrders', 'completeOrders', 'cancelledOrders', 'usersCount', 'latestUsers', 'latestOrders'));
     }
 
+    public function loopCumulativeOrder($cumulativeOrder){
+        $address = UserAddress::find($cumulativeOrder->address_id);
+
+        $cumulativeOrder->address = $address->address;
+        $cumulativeOrder->house_number = $address->house_number;
+        $cumulativeOrder->apartment_estate = $address->apartment_estate;
+        $cumulativeOrder->landmark = $address->landmark;
+
+        $cumulativeOrder->created_at_parsed = $cumulativeOrder->created_at->timezone('Africa/Nairobi')->format('dS M Y \\a\\t g:i a');
+
+        switch ($cumulativeOrder->status) {
+            case '0':
+                $status = 'Ongoing';
+                break;
+            case '1':
+                $status = 'Completed';
+                break;
+            case '2':
+                $status = 'Cancelled';
+                break;
+            case '3':
+                $status = 'Rejected';
+                break;
+            case '4':
+                $status = 'Paid';
+                break;
+            default:
+                $status = "Undefined";
+        }
+        $cumulativeOrder->status = $status;
+
+        $gasItems = json_decode($cumulativeOrder->user_orders_gases);
+        $gasItemsOrders = UserOrder::whereIn('id', $gasItems)->get();
+        foreach ($gasItemsOrders as $myOrder) {
+            $gas = Gas::find($myOrder->gas_id);
+            $myOrder->classification = $gas->classification;
+            $myOrder->weight = $gas->weight;
+            $myOrder->initialPrice = $gas->initialPrice;
+            $myOrder->price = $gas->price;
+            $myOrder->company_name = GasCompany::find($gas->company_id)->name;
+        }
+
+        $accessoryItems = json_decode($cumulativeOrder->user_orders_accessory);
+        $accessoryItemsOrders = UserOrderAccessory::whereIn('id', $accessoryItems)->get();
+        foreach ($accessoryItemsOrders as $accessoryOrder) {
+            $accessory = GasAccessory::find($accessoryOrder->accessory_id);
+            $accessoryOrder->accessory = $accessory;
+        }
+
+        $cumulativeOrder->gasItemsOrders = $gasItemsOrders;
+        $cumulativeOrder->accessoryItemsOrders = $accessoryItemsOrders;
+    }
     public function viewCompanies()
     {
         $companies = GasCompany::orderBy('name', 'asc')->get();
@@ -144,8 +169,13 @@ class AdminController extends Controller
                     $status = '3';
             }
             $latestOrders = $this->fetchOrders(false, $status);
-
         }
+
+
+        foreach ($latestOrders as $latestOrder){
+            $latestOrder->user = User::find($latestOrder->user_id);
+        }
+
         return view('orders', compact('latestOrders'));
     }
 

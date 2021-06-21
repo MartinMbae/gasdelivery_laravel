@@ -329,7 +329,7 @@ class ApiController extends Controller
             return response()->json(
                 [
                     'success' => true,
-                    'orders' => $cumulativeOrder,
+                    'orders' => $myCumulativeOrders,
                 ], $this->successStatus);
         }
     }
@@ -429,7 +429,7 @@ class ApiController extends Controller
             return response()->json(
                 [
                     'success' => true,
-                    'orders' => $cumulativeOrder,
+                    'orders' => $myCumulativeOrders,
                 ], $this->successStatus);
         }
     }

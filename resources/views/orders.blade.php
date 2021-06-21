@@ -23,25 +23,13 @@
                                            Phone
                                         </th>
                                         <th>
-                                            Weight
-                                        </th>
-                                        <th>
-                                            Service
-                                        </th>
-                                        <td>
-                                            Quantity
-                                        </td>
-                                        <th>
-                                            Amount
-                                        </th>
-                                        <th>
-                                           Total
-                                        </th>
-                                        <th>
-                                            Order Date
+                                            Item
                                         </th>
                                         <th>
                                             Status
+                                        </th>
+                                        <th>
+                                            Order Date
                                         </th>
                                         <th>
                                             Action
@@ -59,13 +47,22 @@
                                             <td>{{ $latestOrders->firstItem() + $key }}</td>
                                             <td>{{ $latestOrder->user->name }}</td>
                                             <td>{{ $latestOrder->user->phone }}</td>
-                                            <td>{{ $latestOrder->weight }} Kg</td>
-                                            <td>{{ $latestOrder->classification }}</td>
-                                            <td>{{ $latestOrder->count }}</td>
-                                            <td>{{ $latestOrder->price }}</td>
-                                            <td>{{ (int) $latestOrder->price * (int) $latestOrder->count }}</td>
-                                            <td>{{ $latestOrder->date }}</td>
-                                            <td>{{ $latestOrder->stage }}</td>
+                                            <td>
+                                                <ul>
+                                                    @foreach($latestOrder->gasItemsOrders as $gasItemsOrder)
+                                                        <li>
+                                                            {{ "$gasItemsOrder->count $gasItemsOrder->company_name  Gas ($gasItemsOrder->classification) for Ksh. $gasItemsOrder->total_price" }}
+                                                        </li>
+                                                    @endforeach
+                                                    @foreach($latestOrder->accessoryItemsOrders as $accessoryItemsOrder)
+                                                        <li>
+                                                            {{ "$accessoryItemsOrder->count ".$accessoryItemsOrder->accessory->title . ' for Ksh.'. $accessoryItemsOrder->total_price }}
+                                                        </li>
+                                                    @endforeach
+                                                </ul>
+                                            </td>
+                                            <td>{{ $latestOrder->status }}</td>
+                                            <td>{{ $latestOrder->created_at_parsed }}</td>
                                             <td>
                                                 <div class="dropdown">
                                                     <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
