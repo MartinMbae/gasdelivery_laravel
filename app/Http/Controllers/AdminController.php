@@ -117,7 +117,7 @@ class AdminController extends Controller
         $gasItems = json_decode($cumulativeOrder->user_orders_gases);
         $gasItemsOrders = UserOrder::whereIn('id', $gasItems)->get();
         foreach ($gasItemsOrders as $myOrder) {
-            $gas = Gas::find($myOrder->gas_id);
+            $gas = Gas::withTrashed()->find($myOrder->gas_id);
             $myOrder->classification = $gas->classification;
             $myOrder->weight = $gas->weight;
             $myOrder->initialPrice = $gas->initialPrice;
@@ -128,7 +128,7 @@ class AdminController extends Controller
         $accessoryItems = json_decode($cumulativeOrder->user_orders_accessory);
         $accessoryItemsOrders = UserOrderAccessory::whereIn('id', $accessoryItems)->get();
         foreach ($accessoryItemsOrders as $accessoryOrder) {
-            $accessory = GasAccessory::find($accessoryOrder->accessory_id);
+            $accessory = GasAccessory::withTrashed()->find($accessoryOrder->accessory_id);
             $accessoryOrder->accessory = $accessory;
         }
 
