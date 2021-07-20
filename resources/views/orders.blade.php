@@ -26,6 +26,9 @@
                                             Item
                                         </th>
                                         <th>
+                                            Address
+                                        </th>
+                                        <th>
                                             Status
                                         </th>
                                         <th>
@@ -61,6 +64,11 @@
                                                     @endforeach
                                                 </ul>
                                             </td>
+                                            <td>
+                                                {{ $latestOrder->address }}
+                                                <button class="btn btn-sm"  type="button"
+                                                        data-toggle="modal" data-target="#viewFullAddress{{ $latestOrder->id }}">View Full Address</button>
+                                            </td>
                                             <td>{{ $latestOrder->status }}</td>
                                             <td>{{ $latestOrder->created_at_parsed }}</td>
                                             <td>
@@ -86,6 +94,28 @@
                                                 </div>
                                             </td>
                                         </tr>
+                                        <!-- Modal -->
+                                        <div class="modal fade" id="viewFullAddress{{ $latestOrder->id }}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="exampleModalLabel">Address</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <ul>
+                                                            <li><b>Address :</b> {{ $latestOrder->address }} </li>
+                                                            <li><b>House Number :</b> {{ $latestOrder->house_number }} </li>
+                                                            <li><b>Estate :</b> {{ $latestOrder->apartment_estate }} </li>
+                                                            <li><b>Landmark :</b> {{ $latestOrder->landmark }} </li>
+                                                        </ul>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
                                     @endforeach
 
                                     </tbody>

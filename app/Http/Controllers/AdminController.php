@@ -52,7 +52,7 @@ class AdminController extends Controller
     public function fetchOrders($limit, $status = null)
     {
         if ($limit) {
-            $latestOrders = CumulativeOrder::orderBy('created_at', 'desc')->paginate(5);
+            $latestOrders = CumulativeOrder::orderBy('created_at', 'desc')->paginate(20);
         } else {
             if ($status == null) {
                 $latestOrders = CumulativeOrder::orderBy('created_at', 'desc')->paginate(10);
@@ -73,7 +73,7 @@ class AdminController extends Controller
         $completeOrders = CumulativeOrder::where('status', '1')->count();
         $cancelledOrders = CumulativeOrder::where('status', '2')->count();
         $usersCount = User::where('level', '0')->count();
-        $latestUsers = User::orderBy('created_at', 'desc')->limit(5)->get();
+        $latestUsers = User::orderBy('created_at', 'desc')->limit(10)->get();
         $latestOrders = $this->fetchOrders(true);
 
         foreach ($latestOrders as $latestOrder){

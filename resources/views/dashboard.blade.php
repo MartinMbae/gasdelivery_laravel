@@ -75,7 +75,7 @@
                     <div class="card">
                         <div class="card-header card-header-primary">
                             <h4 class="card-title">Latest Registered Users</h4>
-                            <p class="card-category">5 latest users</p>
+                            <p class="card-category">10 latest users</p>
                         </div>
                         <div class="card-body table-responsive">
                             <table class="table table-hover">
@@ -104,7 +104,7 @@
                     <div class="card">
                         <div class="card-header card-header-primary">
                             <h4 class="card-title">Latest Orders</h4>
-                            <p class="card-category">5 latest orders</p>
+                            <p class="card-category">10 latest orders</p>
                         </div>
                         <div class="card-body table-responsive">
                             <table class="table table-hover">
