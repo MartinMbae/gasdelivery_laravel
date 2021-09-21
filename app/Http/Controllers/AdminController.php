@@ -95,7 +95,7 @@ class AdminController extends Controller
 
         switch ($cumulativeOrder->status) {
             case '0':
-                $status = 'Ongoing';
+                $status = 'Unpaid';
                 break;
             case '1':
                 $status = 'Completed';
